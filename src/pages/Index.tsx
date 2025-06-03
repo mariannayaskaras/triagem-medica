@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ const Index = () => {
   const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
   const [symptoms, setSymptoms] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [triageResult, setTriageResult] = useState<{
     severity: SeverityLevel;
     symptoms: string[];
@@ -20,12 +20,20 @@ const Index = () => {
   } | null>(null);
 
   const handleSymptomSubmission = (symptomText: string) => {
+    if (symptomText.trim().length < 10) {
+      alert("Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).");
+      return;
+    }
+
     setSymptoms(symptomText);
-    
-    // Analyze symptoms using our triageAlgorithm
-    const result = analyzeSymptoms(symptomText);
-    setTriageResult(result);
-    setShowResults(true);
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const result = analyzeSymptoms(symptomText);
+      setTriageResult(result);
+      setShowResults(true);
+      setIsLoading(false);
+    }, 1500);
   };
 
   const handleReset = () => {
@@ -37,7 +45,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container max-w-4xl py-8 px-4">
         {!showResults ? (
           <div className="space-y-8">
@@ -48,11 +56,11 @@ const Index = () => {
                 e sugerir o tipo de atendimento médico mais adequado.
               </p>
             </div>
-            
+
             <div className="flex justify-center">
               <EmergencyButton />
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Como você prefere informar seus sintomas?</CardTitle>
@@ -79,7 +87,7 @@ const Index = () => {
                 </Tabs>
               </CardContent>
             </Card>
-            
+
             <div className="text-center text-sm text-gray-500">
               <p>
                 Atenção: Este sistema não substitui avaliação médica profissional.
@@ -98,23 +106,29 @@ const Index = () => {
                 Voltar e fazer nova triagem
               </button>
             </div>
-            
-            {triageResult && (
-              <TriageResult 
-                severity={triageResult.severity} 
-                recommendation={triageResult.recommendation}
-                symptoms={triageResult.symptoms}
-              />
+
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              triageResult && (
+                <TriageResult 
+                  severity={triageResult.severity} 
+                  recommendation={triageResult.recommendation}
+                  symptoms={triageResult.symptoms}
+                />
+              )
             )}
           </div>
         )}
       </main>
-      
+
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="container max-w-4xl px-4 text-center text-sm text-gray-500">
           <p>
             © 2025 Medic AI Triagem Pro - 
-            <span className="text-xs">Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
+            <span className="text-xs"> Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
           </p>
         </div>
       </footer>
