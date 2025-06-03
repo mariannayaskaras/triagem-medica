@@ -68,7 +68,7 @@ const Index = () => {
           <div className="space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-gray-800">Triagem Médica Assistida</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
+              <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
                 Descreva seus sintomas em detalhes e nossa IA irá analisar a gravidade
                 e sugerir o tipo de atendimento médico mais adequado.
               </p>
@@ -78,20 +78,20 @@ const Index = () => {
               <EmergencyButton />
             </div>
 
-            <Card>
+            <Card className="w-full">
               <CardHeader>
-                <CardTitle>Como você prefere informar seus sintomas?</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Como você prefere informar seus sintomas?</CardTitle>
+                <CardDescription className="text-sm">
                   Escolha entre digitar ou usar sua voz para descrever o que está sentindo
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="w-full">
                 <Tabs
                   defaultValue="text"
                   value={inputMethod}
                   onValueChange={(value) => setInputMethod(value as 'text' | 'voice')}
                 >
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsList className="grid grid-cols-1 sm:grid-cols-2 w-full mb-6">
                     <TabsTrigger value="text">Digitar Sintomas</TabsTrigger>
                     <TabsTrigger value="voice">Usar Voz</TabsTrigger>
                   </TabsList>
@@ -105,7 +105,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-xs sm:text-sm text-gray-500 px-2">
               <p>
                 Atenção: Este sistema não substitui avaliação médica profissional.
                 Em caso de emergência, ligue imediatamente para 192 (SAMU).
@@ -114,11 +114,11 @@ const Index = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <h2 className="text-xl font-bold">Resultado da Triagem</h2>
               <button 
                 onClick={handleReset}
-                className="text-triage-blue hover:underline"
+                className="text-triage-blue text-sm hover:underline"
               >
                 Voltar e fazer nova triagem
               </button>
@@ -140,9 +140,9 @@ const Index = () => {
                   {triageHistory.length > 0 && (
                     <div className="mt-6">
                       <h3 className="text-lg font-semibold mb-2">Histórico de Triagens</h3>
-                      <ul className="space-y-2 text-sm text-gray-700">
+                      <ul className="space-y-3 text-sm text-gray-700">
                         {triageHistory.map((item, idx) => (
-                          <li key={idx} className="border border-gray-300 rounded p-3 bg-white">
+                          <li key={idx} className="border border-gray-300 rounded p-3 bg-white break-words">
                             <p><strong>Data:</strong> {item.date}</p>
                             <p><strong>Sintomas:</strong> {item.symptoms}</p>
                             <p><strong>Recomendação:</strong> {item.recommendation}</p>
@@ -172,8 +172,10 @@ const Index = () => {
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="container max-w-4xl px-4 text-center text-sm text-gray-500">
           <p>
-            © 2025 Medic AI Triagem Pro - 
-            <span className="text-xs"> Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
+            © 2025 Medic AI Triagem Pro –{" "}
+            <span className="text-xs">
+              Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional
+            </span>
           </p>
         </div>
       </footer>
