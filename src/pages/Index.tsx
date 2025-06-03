@@ -19,6 +19,13 @@ const Index = () => {
     recommendation: string;
   } | null>(null);
 
+  const [triageHistory, setTriageHistory] = useState<
+    { date: string; symptoms: string; recommendation: string }[]
+  >(() => {
+    const stored = localStorage.getItem("triagemHistorico");
+    return stored ? JSON.parse(stored) : [];
+  });
+
   const handleSymptomSubmission = (symptomText: string) => {
     if (symptomText.trim().length < 10) {
       alert("Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).");
@@ -33,6 +40,16 @@ const Index = () => {
       setTriageResult(result);
       setShowResults(true);
       setIsLoading(false);
+
+      const novaEntrada = {
+        date: new Date().toLocaleString(),
+        symptoms: symptomText,
+        recommendation: result.recommendation,
+      };
+
+      const novoHistorico = [novaEntrada, ...triageHistory.slice(0, 4)];
+      setTriageHistory(novoHistorico);
+      localStorage.setItem("triagemHistorico", JSON.stringify(novoHistorico));
     }, 1500);
   };
 
@@ -113,11 +130,39 @@ const Index = () => {
               </div>
             ) : (
               triageResult && (
-                <TriageResult 
-                  severity={triageResult.severity} 
-                  recommendation={triageResult.recommendation}
-                  symptoms={triageResult.symptoms}
-                />
+                <>
+                  <TriageResult 
+                    severity={triageResult.severity} 
+                    recommendation={triageResult.recommendation}
+                    symptoms={triageResult.symptoms}
+                  />
+
+                  {triageHistory.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">Histórico de Triagens</h3>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        {triageHistory.map((item, idx) => (
+                          <li key={idx} className="border border-gray-300 rounded p-3 bg-white">
+                            <p><strong>Data:</strong> {item.date}</p>
+                            <p><strong>Sintomas:</strong> {item.symptoms}</p>
+                            <p><strong>Recomendação:</strong> {item.recommendation}</p>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="text-right mt-3">
+                        <button
+                          className="text-red-600 text-sm hover:underline"
+                          onClick={() => {
+                            setTriageHistory([]);
+                            localStorage.removeItem("triagemHistorico");
+                          }}
+                        >
+                          Limpar histórico
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )
             )}
           </div>
