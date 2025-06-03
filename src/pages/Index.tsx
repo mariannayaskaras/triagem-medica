@@ -7,6 +7,7 @@ import VoiceRecorder from '@/components/VoiceRecorder';
 import TriageResult, { SeverityLevel } from '@/components/TriageResult';
 import EmergencyButton from '@/components/EmergencyButton';
 import { analyzeSymptoms } from '@/utils/triageAlgorithm';
+import MedicalMap from '@/components/MedicalMap';
 
 const Index = () => {
   const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
@@ -47,7 +48,7 @@ const Index = () => {
         recommendation: result.recommendation,
       };
 
-      const novoHistorico = [novaEntrada, ...triageHistory.slice(0, 4)];
+      const novoHistorico = [novaEntrada, ...triageHistory];
       setTriageHistory(novoHistorico);
       localStorage.setItem("triagemHistorico", JSON.stringify(novoHistorico));
     }, 1500);
@@ -59,6 +60,11 @@ const Index = () => {
     setTriageResult(null);
   };
 
+  const clearHistory = () => {
+    setTriageHistory([]);
+    localStorage.removeItem("triagemHistorico");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -68,7 +74,7 @@ const Index = () => {
           <div className="space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-gray-800">Triagem Médica Assistida</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
+              <p className="text-gray-600 max-w-2xl mx-auto">
                 Descreva seus sintomas em detalhes e nossa IA irá analisar a gravidade
                 e sugerir o tipo de atendimento médico mais adequado.
               </p>
@@ -78,20 +84,20 @@ const Index = () => {
               <EmergencyButton />
             </div>
 
-            <Card className="w-full">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Como você prefere informar seus sintomas?</CardTitle>
-                <CardDescription className="text-sm">
+                <CardTitle>Como você prefere informar seus sintomas?</CardTitle>
+                <CardDescription>
                   Escolha entre digitar ou usar sua voz para descrever o que está sentindo
                 </CardDescription>
               </CardHeader>
-              <CardContent className="w-full">
+              <CardContent>
                 <Tabs
                   defaultValue="text"
                   value={inputMethod}
                   onValueChange={(value) => setInputMethod(value as 'text' | 'voice')}
                 >
-                  <TabsList className="grid grid-cols-1 sm:grid-cols-2 w-full mb-6">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="text">Digitar Sintomas</TabsTrigger>
                     <TabsTrigger value="voice">Usar Voz</TabsTrigger>
                   </TabsList>
@@ -105,7 +111,30 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <div className="text-center text-xs sm:text-sm text-gray-500 px-2">
+            {triageHistory.length > 0 && (
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">Histórico de Triagens</h3>
+                  <button
+                    onClick={clearHistory}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Limpar histórico
+                  </button>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {triageHistory.map((entry, index) => (
+                    <li key={index} className="border p-3 rounded-md bg-white shadow-sm">
+                      <p className="text-xs text-gray-400">{entry.date}</p>
+                      <p><strong>Sintomas:</strong> {entry.symptoms}</p>
+                      <p><strong>Recomendação:</strong> {entry.recommendation}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="text-center text-sm text-gray-500">
               <p>
                 Atenção: Este sistema não substitui avaliação médica profissional.
                 Em caso de emergência, ligue imediatamente para 192 (SAMU).
@@ -114,11 +143,11 @@ const Index = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+            <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold">Resultado da Triagem</h2>
               <button 
                 onClick={handleReset}
-                className="text-triage-blue text-sm hover:underline"
+                className="text-triage-blue hover:underline"
               >
                 Voltar e fazer nova triagem
               </button>
@@ -136,32 +165,10 @@ const Index = () => {
                     recommendation={triageResult.recommendation}
                     symptoms={triageResult.symptoms}
                   />
-
-                  {triageHistory.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold mb-2">Histórico de Triagens</h3>
-                      <ul className="space-y-3 text-sm text-gray-700">
-                        {triageHistory.map((item, idx) => (
-                          <li key={idx} className="border border-gray-300 rounded p-3 bg-white break-words">
-                            <p><strong>Data:</strong> {item.date}</p>
-                            <p><strong>Sintomas:</strong> {item.symptoms}</p>
-                            <p><strong>Recomendação:</strong> {item.recommendation}</p>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="text-right mt-3">
-                        <button
-                          className="text-red-600 text-sm hover:underline"
-                          onClick={() => {
-                            setTriageHistory([]);
-                            localStorage.removeItem("triagemHistorico");
-                          }}
-                        >
-                          Limpar histórico
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-2">Unidades próximas:</h3>
+                    <MedicalMap facilityType="UPA" />
+                  </div>
                 </>
               )
             )}
@@ -172,10 +179,8 @@ const Index = () => {
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="container max-w-4xl px-4 text-center text-sm text-gray-500">
           <p>
-            © 2025 Medic AI Triagem Pro –{" "}
-            <span className="text-xs">
-              Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional
-            </span>
+            © 2025 Medic AI Triagem Pro — 
+            <span className="text-xs"> Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
           </p>
         </div>
       </footer>
