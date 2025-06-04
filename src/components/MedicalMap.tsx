@@ -14,7 +14,8 @@ interface Facility {
   coordinates?: { lat: number; lng: number };
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDNgw8gwBZkQCzrfUAuGPoYtJ8UZT15TUs';
+// ✅ Chave de API via variável de ambiente
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const containerStyle = {
   width: '100%',
@@ -33,6 +34,7 @@ const MedicalMap = () => {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [filter, setFilter] = useState<'UBS' | 'UPA' | 'Hospital'>('UPA');
 
+  // Mock de unidades de saúde
   const facilities: Facility[] = [
     {
       id: 1, name: 'UBS Vila Nova', type: 'UBS', address: 'Rua das Flores, 123', distance: '1,2 km', waitTime: '~30 min',
@@ -148,7 +150,7 @@ const MedicalMap = () => {
               title="Sua localização"
             />
 
-            {filteredFacilities.map((facility) => (
+            {filteredFacilities.map((facility) =>
               facility.coordinates && (
                 <Marker
                   key={facility.id}
@@ -157,7 +159,7 @@ const MedicalMap = () => {
                   icon={facilityIcon(facility.type)}
                 />
               )
-            ))}
+            )}
 
             {selectedFacility && selectedFacility.coordinates && (
               <InfoWindow

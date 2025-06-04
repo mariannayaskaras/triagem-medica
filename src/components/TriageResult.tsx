@@ -6,6 +6,7 @@ import MedicalMap from './MedicalMap';
 import { supabase } from '@/lib/supabaseClient';
 
 export type SeverityLevel = 'low' | 'medium' | 'high';
+type FacilityType = 'UBS' | 'UPA' | 'Hospital';
 
 interface TriageResultProps {
   severity: SeverityLevel;
@@ -13,32 +14,39 @@ interface TriageResultProps {
   symptoms: string[];
 }
 
-const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps) => {
-  const severityConfig = {
-    low: {
-      title: 'Baixa Severidade',
-      color: 'triage-low',
-      icon: CircleCheck,
-      facilityType: 'UBS' as const,
-      description: 'Seus sintomas indicam uma condição que pode ser tratada em uma Unidade Básica de Saúde (UBS).'
-    },
-    medium: {
-      title: 'Severidade Média',
-      color: 'triage-medium',
-      icon: AlertCircle,
-      facilityType: 'UPA' as const,
-      description: 'Seus sintomas indicam que você deve procurar uma Unidade de Pronto Atendimento (UPA).'
-    },
-    high: {
-      title: 'Alta Severidade',
-      color: 'triage-high',
-      icon: AlertCircle,
-      facilityType: 'Hospital' as const,
-      description: 'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância.'
-    }
-  };
+const colorClasses = {
+  low: {
+    border: 'border-green-500',
+    bg: 'bg-green-500/10',
+    text: 'text-green-500',
+    icon: CircleCheck,
+    facilityType: 'UBS' as FacilityType,
+    title: 'Baixa Severidade',
+    description: 'Seus sintomas indicam uma condição que pode ser tratada em uma Unidade Básica de Saúde (UBS).'
+  },
+  medium: {
+    border: 'border-yellow-500',
+    bg: 'bg-yellow-500/10',
+    text: 'text-yellow-500',
+    icon: AlertCircle,
+    facilityType: 'UPA' as FacilityType,
+    title: 'Severidade Média',
+    description: 'Seus sintomas indicam que você deve procurar uma Unidade de Pronto Atendimento (UPA).'
+  },
+  high: {
+    border: 'border-red-500',
+    bg: 'bg-red-500/10',
+    text: 'text-red-500',
+    icon: AlertCircle,
+    facilityType: 'Hospital' as FacilityType,
+    title: 'Alta Severidade',
+    description: 'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância.'
+  }
+};
 
-  const config = severityConfig[severity];
+const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps) => {
+  const config = colorClasses[severity];
+  const Icon = config.icon;
 
   useEffect(() => {
     const salvarTriagem = async () => {
@@ -61,16 +69,15 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
     };
 
     salvarTriagem();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [config.title, recommendation, symptoms]);
 
   return (
     <div className="space-y-6">
-      <Card className={`border-2 border-${config.color}`}>
-        <CardHeader className={`bg-${config.color}/10`}>
+      <Card className={`border-2 ${config.border}`}>
+        <CardHeader className={config.bg}>
           <div className="flex items-center gap-2">
-            <config.icon className={`h-6 w-6 text-${config.color}`} />
-            <CardTitle className={`text-${config.color}`}>{config.title}</CardTitle>
+            <Icon className={`h-6 w-6 ${config.text}`} />
+            <CardTitle className={config.text}>{config.title}</CardTitle>
           </div>
           <CardDescription>{config.description}</CardDescription>
         </CardHeader>
