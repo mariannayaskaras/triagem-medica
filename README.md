@@ -1,40 +1,40 @@
-# 🏥 Triagem Médica Inteligente
+# 🩺 Triagem Médica
 
-Este é um projeto de site voltado para a **triagem médica online**, permitindo que qualquer pessoa descreva seus sintomas e receba uma análise sobre a **severidade** do caso. Com base nas informações fornecidas, o sistema recomenda o tipo de atendimento mais adequado:
+Aplicação web para simulação de triagem médica. O usuário informa sintomas, e o sistema classifica a gravidade e recomenda o tipo de atendimento adequado (UBS, UPA ou Hospital), além de exibir unidades próximas no mapa.
 
-- **UBS (Unidade Básica de Saúde)** – Para sintomas leves ou acompanhamento de rotina.
-- **UPA (Unidade de Pronto Atendimento)** – Para situações urgentes que não são emergências.
-- **SAMU (Serviço de Atendimento Móvel de Urgência)** – Para emergências que exigem socorro imediato.
+🔗 **Acesse aqui:** [https://triagem-medica.vercel.app](https://triagem-medica.vercel.app)
 
-Além da triagem, o sistema também utiliza a **localização do usuário** (com permissão) para sugerir os **locais de atendimento mais próximos**.
+---
 
-## 🔍 Funcionalidades
+## 🚀 Funcionalidades
 
-- ✅ Análise de sintomas baseada em critérios clínicos.
-- ✅ Classificação automática de severidade.
-- ✅ Recomendação do tipo de atendimento (UBS, UPA, SAMU).
-- ✅ Geolocalização para encontrar o ponto de atendimento mais próximo.
-- ✅ Interface simples e amigável.
+- Classificação de sintomas em baixa, média ou alta severidade.
+- Recomendações baseadas na gravidade.
+- Exibição de unidades de saúde próximas via Google Maps.
+- Botão de emergência em casos graves.
+- Armazenamento de dados da triagem no Supabase.
 
-## 🌐 Acesse o site
+---
 
-🔗 [Clique aqui para acessar o site](INSIRA_AQUI_A_URL_DO_SITE)
+## 🛠️ Tecnologias
 
-> Substitua o link acima pela URL oficial do projeto.
+- **React + TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **Supabase**
+- **Google Maps API**
+- **Lucide Icons**
 
-## 🚀 Tecnologias utilizadas
+---
 
-- **JavaScript** – Lógica da aplicação.
-- **TypeScript** – Tipagem estática e maior segurança no código.
-- **Tailwind CSS** – Estilização rápida e responsiva da interface.
+## 📌 Aviso
 
-## 📌 Aviso importante
+Este sistema é uma simulação e **não substitui atendimento médico profissional**.
 
-> Este site **não substitui** o atendimento médico presencial. As recomendações fornecidas são apenas **orientações iniciais** para ajudar o usuário a buscar o tipo correto de serviço de saúde. Em caso de dúvida ou persistência dos sintomas, **procure um profissional de saúde**.
+---
 
-## 📫 Contato
+## ✉️ Contato
 
-Para sugestões, dúvidas ou parcerias, entre em contato conosco:  
-✉️ [Seu Email Aqui]
-
-
+Desenvolvido por **Marianna Yaskara**  
+📧 [marianna.yaskara@live.com](mailto:marianna.yaskara@live.com)  
+🔗 [triagem-medica.vercel.app](https://triagem-medica.vercel.app)
