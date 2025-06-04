@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CircleCheck } from 'lucide-react';
 import EmergencyButton from './EmergencyButton';
 import MedicalMap from './MedicalMap';
+import { supabase } from '@/lib/supabaseClient'; // Importa o Supabase
 
 export type SeverityLevel = 'low' | 'medium' | 'high';
 
@@ -39,7 +39,28 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
   };
 
   const config = severityConfig[severity];
-  
+
+  // Salva no Supabase ao montar o componente
+  useEffect(() => {
+    const salvarTriagem = async () => {
+      const data_hora = new Date().toISOString();
+      const { error } = await supabase.from('triagem-medica').insert([
+        {
+          sintomas: symptoms,
+          resultado: config.title,
+          data_hora,
+          recomendacao: recommendation
+        }
+      ]);
+      if (error) {
+        // Loga para debug se der erro
+        console.error('Erro ao salvar triagem:', error);
+      }
+    };
+    salvarTriagem();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executa só ao montar o componente
+
   return (
     <div className="space-y-6">
       <Card className={`border-2 border-${config.color}`}>
