@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle, CircleCheck } from 'lucide-react';
 import EmergencyButton from './EmergencyButton';
 import MedicalMap from './MedicalMap';
-import { supabase } from '@/lib/supabaseClient'; // Importa o Supabase
+import { supabase } from '@/lib/supabaseClient';
 
 export type SeverityLevel = 'low' | 'medium' | 'high';
 
@@ -40,26 +40,29 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
 
   const config = severityConfig[severity];
 
-  // Salva no Supabase ao montar o componente
   useEffect(() => {
     const salvarTriagem = async () => {
       const data_hora = new Date().toISOString();
-      const { error } = await supabase.from('triagem-medica').insert([
-        {
-          sintomas: symptoms,
-          resultado: config.title,
-          data_hora,
-          recomendacao: recommendation
-        }
-      ]);
+
+      const triagemData = {
+        sintomas: symptoms,
+        resultado: config.title,
+        data_hora,
+        recomendacao: recommendation
+      };
+
+      console.log("📤 Enviando triagem para Supabase:", triagemData);
+
+      const { error } = await supabase.from('triagem-medica').insert([triagemData]);
+
       if (error) {
-        // Loga para debug se der erro
-        console.error('Erro ao salvar triagem:', error);
+        console.error('❌ Erro ao salvar triagem:', error);
       }
     };
+
     salvarTriagem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Executa só ao montar o componente
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -80,7 +83,7 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
               ))}
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2">Recomendação:</h3>
             <p>{recommendation}</p>
