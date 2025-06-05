@@ -54,12 +54,14 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   };
 
   const filteredFacilities = useMemo(() => {
-    console.log('📌 facilityType recebido:', facilityType);
-    console.log('📌 Coordenadas do usuário:', coords);
+    if (import.meta.env.DEV) {
+      console.log('📌 facilityType recebido:', facilityType);
+      console.log('📌 Coordenadas do usuário:', coords);
+    }
 
     if (!coords) {
       const semCoords = facilities.filter(f => f.type === facilityType);
-      console.log('⚠️ Sem coordenadas, unidades filtradas:', semCoords);
+      if (import.meta.env.DEV) console.log('⚠️ Sem coordenadas, unidades filtradas:', semCoords);
       return semCoords;
     }
 
@@ -79,7 +81,7 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
         return da - db;
       });
 
-    console.log('✅ Unidades filtradas com distância:', resultado);
+    if (import.meta.env.DEV) console.log('✅ Unidades filtradas com distância:', resultado);
     return resultado;
   }, [facilityType, coords]);
 
@@ -122,11 +124,11 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
 
       filteredFacilities.forEach((facility) => {
         if (!facility.coordinates) {
-          console.warn(`❌ Unidade "${facility.name}" sem coordenadas`);
+          if (import.meta.env.DEV) console.warn(`❌ Unidade "${facility.name}" sem coordenadas`);
           return;
         }
 
-        console.log('📍 Marcador adicionado:', facility.name);
+        if (import.meta.env.DEV) console.log('📍 Marcador adicionado:', facility.name);
 
         const el = document.createElement('div');
         el.className = 'custom-marker';
@@ -150,6 +152,20 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
           .setPopup(popup)
           .addTo(map);
       });
+
+      // ✅ Ajuste automático para enquadrar todos os pontos
+      if (filteredFacilities.length > 0 && coords) {
+        const bounds = new maplibregl.LngLatBounds();
+        bounds.extend([coords.lng, coords.lat]);
+
+        filteredFacilities.forEach(f => {
+          if (f.coordinates) {
+            bounds.extend([f.coordinates.lng, f.coordinates.lat]);
+          }
+        });
+
+        map.fitBounds(bounds, { padding: 60 });
+      }
     }
   }, [filteredFacilities, mapLoaded, coords]);
 
