@@ -59,7 +59,10 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
         recomendacao: recommendation
       };
 
-      console.log("📤 Enviando triagem para Supabase:", triagemData);
+      if (import.meta.env.DEV) {
+  console.log("📤 Enviando triagem para Supabase:", triagemData);
+}
+
 
       const { error } = await supabase.from('triagem-medica').insert([triagemData]);
 
