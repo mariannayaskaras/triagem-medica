@@ -1,8 +1,12 @@
-
 import React from 'react';
 import { useLocation } from '@/hooks/use-location';
-import { MapPin, Loader, Info } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MapPin, Loader } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface LocationDisplayProps {
   showIcon?: boolean;
@@ -30,19 +34,23 @@ const LocationDisplay = ({ showIcon = true, className = '' }: LocationDisplayPro
   }
 
   return (
-    <div className="space-y-2">
+    <TooltipProvider>
       <div className={`flex items-center gap-1 ${className}`}>
-        {showIcon && <MapPin className="h-4 w-4 text-triage-blue" />}
+        {showIcon && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <MapPin className="h-4 w-4 text-triage-blue cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-1 rounded shadow-sm">
+              <p className="text-xs max-w-[200px]">
+                <strong>Nota:</strong> A localização pode não ser precisa se você estiver usando VPN ou proxy.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        )}
         <span className="text-sm">{city}</span>
       </div>
-      
-      <Alert className="border-amber-200 bg-amber-50">
-        <Info className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-xs text-amber-700">
-          <strong>Nota:</strong> A localização pode não ser precisa se você estiver usando VPN ou proxy.
-        </AlertDescription>
-      </Alert>
-    </div>
+    </TooltipProvider>
   );
 };
 
