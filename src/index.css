@@ -99,3 +99,11 @@
     @apply bg-background text-foreground;
   }
 }
+.custom-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
