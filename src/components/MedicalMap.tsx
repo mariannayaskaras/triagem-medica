@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Loader } from 'lucide-react';
-import { Button } from './ui/button';
 import { useLocation } from '@/hooks/use-location';
 
 interface Facility {
