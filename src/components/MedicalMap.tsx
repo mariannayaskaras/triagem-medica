@@ -54,9 +54,16 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   };
 
   const filteredFacilities = useMemo(() => {
-    if (!coords) return facilities.filter(f => f.type === facilityType);
+    console.log('📌 facilityType recebido:', facilityType);
+    console.log('📌 Coordenadas do usuário:', coords);
 
-    return facilities
+    if (!coords) {
+      const semCoords = facilities.filter(f => f.type === facilityType);
+      console.log('⚠️ Sem coordenadas, unidades filtradas:', semCoords);
+      return semCoords;
+    }
+
+    const resultado = facilities
       .filter(f => f.type === facilityType)
       .map(f => {
         if (!f.coordinates) return f;
@@ -71,6 +78,9 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
         const db = parseFloat(b.distance || '999');
         return da - db;
       });
+
+    console.log('✅ Unidades filtradas com distância:', resultado);
+    return resultado;
   }, [facilityType, coords]);
 
   useEffect(() => {
@@ -103,7 +113,6 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
       const map = mapRef.current;
       document.querySelectorAll('.custom-marker').forEach(el => el.remove());
 
-      // Posição do usuário
       if (coords) {
         new maplibregl.Marker({ color: '#3B82F6' })
           .setLngLat([coords.lng, coords.lat])
@@ -111,9 +120,13 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
           .addTo(map);
       }
 
-      // Unidades filtradas
       filteredFacilities.forEach((facility) => {
-        if (!facility.coordinates) return;
+        if (!facility.coordinates) {
+          console.warn(`❌ Unidade "${facility.name}" sem coordenadas`);
+          return;
+        }
+
+        console.log('📍 Marcador adicionado:', facility.name);
 
         const el = document.createElement('div');
         el.className = 'custom-marker';

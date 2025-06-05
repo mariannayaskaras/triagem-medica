@@ -15,25 +15,21 @@ export function useLocation(): LocationData {
 
   useEffect(() => {
     const sanitizeString = (str: string): string => {
-      if (typeof str !== 'string') return "Local Desconhecido";
-      return str.replace(/<[^>]*>/g, '').substring(0, 100).trim() || "Local Desconhecido";
+      return typeof str === 'string'
+        ? str.replace(/<[^>]*>/g, '').substring(0, 100).trim() || "Local Desconhecido"
+        : "Local Desconhecido";
     };
 
     const buscarPorCoordenadas = async (lat: number, lon: number) => {
+      setCoords({ lat, lng: lon });
       try {
-        setCoords({ lat, lng: lon });
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
         const data = await response.json();
-        const cidade = sanitizeString(
-          data.address?.city ||
-          data.address?.town ||
-          data.address?.village ||
-          "Local Desconhecido"
-        );
+        const cidade = sanitizeString(data.address?.city || data.address?.town || data.address?.village);
         setCity(cidade);
         setError(null);
       } catch (err) {
-        console.warn("Erro ao converter coordenadas, usando fallback por IP.");
+        console.warn("🌐 Erro ao converter coordenadas para cidade. Usando IP como fallback.");
         buscarPorIP();
       } finally {
         setLoading(false);
@@ -44,11 +40,12 @@ export function useLocation(): LocationData {
       try {
         const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
         const data = await response.json();
-        setCity(sanitizeString(data.city || "Local Desconhecido"));
+        setCity(sanitizeString(data.city));
         setCoords(null);
-        setError(null);
+        setError("⚠️ Usando localização aproximada por IP");
+        if (import.meta.env.DEV) console.warn("⚠️ Fallback ativado: localização por IP (menos precisa)");
       } catch (err) {
-        console.error('Erro ao obter a localização via IP:', err);
+        console.error('❌ Falha ao obter localização por IP:', err);
         setCity("Local Desconhecido");
         setCoords(null);
         setError("Falha ao obter localização");
@@ -61,13 +58,13 @@ export function useLocation(): LocationData {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            const { latitude, longitude } = position.coords;
-            buscarPorCoordenadas(latitude, longitude);
+            buscarPorCoordenadas(position.coords.latitude, position.coords.longitude);
           },
-          () => {
-            buscarPorIP(); // fallback
+          (err) => {
+            console.warn("🚫 Geolocalização negada. Usando IP como fallback:", err.message);
+            buscarPorIP();
           },
-          { timeout: 10000 }
+          { timeout: 8000 }
         );
       } else {
         buscarPorIP();
