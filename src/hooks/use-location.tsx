@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 
 export interface LocationData {
   city: string;
+  coords: { lat: number; lng: number } | null;
   loading: boolean;
   error: string | null;
 }
 
 export function useLocation(): LocationData {
   const [city, setCity] = useState("Local Desconhecido");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,14 +21,22 @@ export function useLocation(): LocationData {
 
     const buscarPorCoordenadas = async (lat: number, lon: number) => {
       try {
+        setCoords({ lat, lng: lon });
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
         const data = await response.json();
-        const cidade = sanitizeString(data.address?.city || data.address?.town || data.address?.village || "Local Desconhecido");
+        const cidade = sanitizeString(
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          "Local Desconhecido"
+        );
         setCity(cidade);
         setError(null);
       } catch (err) {
         console.warn("Erro ao converter coordenadas, usando fallback por IP.");
-        buscarPorIP(); // fallback
+        buscarPorIP();
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -34,12 +44,13 @@ export function useLocation(): LocationData {
       try {
         const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
         const data = await response.json();
-        const cidade = sanitizeString(data.city || "Local Desconhecido");
-        setCity(cidade);
+        setCity(sanitizeString(data.city || "Local Desconhecido"));
+        setCoords(null);
         setError(null);
       } catch (err) {
         console.error('Erro ao obter a localização via IP:', err);
         setCity("Local Desconhecido");
+        setCoords(null);
         setError("Falha ao obter localização");
       } finally {
         setLoading(false);
@@ -47,26 +58,24 @@ export function useLocation(): LocationData {
     };
 
     const obterLocalizacao = () => {
-      if ("geolocation" in navigator) {
+      if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             buscarPorCoordenadas(latitude, longitude);
-            setLoading(false);
           },
-          (err) => {
-            console.warn("Permissão negada ou erro na geolocalização:", err);
+          () => {
             buscarPorIP(); // fallback
           },
           { timeout: 10000 }
         );
       } else {
-        buscarPorIP(); // fallback
+        buscarPorIP();
       }
     };
 
     obterLocalizacao();
   }, []);
 
-  return { city, loading, error };
+  return { city, coords, loading, error };
 }

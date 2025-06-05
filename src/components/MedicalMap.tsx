@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Loader } from 'lucide-react';
@@ -10,35 +10,69 @@ interface Facility {
   name: string;
   type: 'UBS' | 'UPA' | 'Hospital';
   address: string;
-  distance: string;
+  distance?: string; // será calculada
   waitTime?: string;
   coordinates?: { lat: number; lng: number };
 }
 
 const MedicalMap = () => {
-  const { city, loading: locationLoading } = useLocation();
+  const { coords, loading: locationLoading } = useLocation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [center, setCenter] = useState<[number, number]>([-37.0677, -10.9091]);
   const [filter, setFilter] = useState<'UBS' | 'UPA' | 'Hospital'>('UPA');
   const [mapLoaded, setMapLoaded] = useState(false);
 
+  // Lista original
   const facilities: Facility[] = [
     {
-      id: 1, name: 'UBS Vila Nova', type: 'UBS', address: 'Rua das Flores, 123', distance: '1,2 km', waitTime: '~30 min',
+      id: 1, name: 'UBS Vila Nova', type: 'UBS', address: 'Rua das Flores, 123', waitTime: '~30 min',
       coordinates: { lat: -10.9147, lng: -37.0594 }
     },
     {
-      id: 2, name: 'UPA Centro', type: 'UPA', address: 'Av. Principal, 500', distance: '2,5 km', waitTime: '~45 min',
+      id: 2, name: 'UPA Centro', type: 'UPA', address: 'Av. Principal, 500', waitTime: '~45 min',
       coordinates: { lat: -10.9213, lng: -37.0669 }
     },
     {
-      id: 3, name: 'Hospital São Lucas', type: 'Hospital', address: 'Av. Central, 1000', distance: '3,8 km', waitTime: '~60 min',
+      id: 3, name: 'Hospital São Lucas', type: 'Hospital', address: 'Av. Central, 1000', waitTime: '~60 min',
       coordinates: { lat: -10.9081, lng: -37.0733 }
     }
   ];
 
-  const filteredFacilities = facilities.filter(f => f.type === filter);
+  // Calcula distância usando fórmula de Haversine
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371; // Raio da Terra em km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Ordena e formata as unidades com base na localização
+  const filteredFacilities = useMemo(() => {
+    if (!coords) return facilities.filter(f => f.type === filter);
+
+    return facilities
+      .map(f => {
+        if (!f.coordinates) return f;
+        const dist = calculateDistance(coords.lat, coords.lng, f.coordinates.lat, f.coordinates.lng);
+        return {
+          ...f,
+          distance: `${dist.toFixed(1)} km`
+        };
+      })
+      .filter(f => f.type === filter)
+      .sort((a, b) => {
+        const da = parseFloat(a.distance || '999');
+        const db = parseFloat(b.distance || '999');
+        return da - db;
+      });
+  }, [filter, coords]);
 
   useEffect(() => {
     if (!mapRef.current && mapContainer.current) {
@@ -59,31 +93,26 @@ const MedicalMap = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCityCoords = async () => {
-      if (!city || city === "Local Desconhecido") return;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        setCenter([lon, lat]);
-        mapRef.current?.flyTo({ center: [lon, lat], zoom: 13 });
-      }
-    };
-
-    fetchCityCoords();
-  }, [city]);
+    if (coords) {
+      setCenter([coords.lng, coords.lat]);
+      mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 13 });
+    }
+  }, [coords]);
 
   useEffect(() => {
     if (mapLoaded && mapRef.current) {
       const map = mapRef.current;
 
-      // Remove todos os marcadores anteriores
       document.querySelectorAll('.custom-marker').forEach(el => el.remove());
 
-      // Adiciona marcadores
+      // Marcador da posição do usuário
+      if (coords) {
+        new maplibregl.Marker({ color: '#3B82F6' })
+          .setLngLat([coords.lng, coords.lat])
+          .setPopup(new maplibregl.Popup().setText('Sua localização'))
+          .addTo(map);
+      }
+
       filteredFacilities.forEach((facility) => {
         if (!facility.coordinates) return;
 
@@ -100,7 +129,7 @@ const MedicalMap = () => {
         const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
           <strong>${facility.name}</strong><br/>
           ${facility.address}<br/>
-          Distância: ${facility.distance}<br/>
+          ${facility.distance ? `Distância: ${facility.distance}<br/>` : ''}
           ${facility.waitTime ? `Espera: ${facility.waitTime}` : ''}
         `);
 
@@ -110,7 +139,7 @@ const MedicalMap = () => {
           .addTo(map);
       });
     }
-  }, [filteredFacilities, mapLoaded]);
+  }, [filteredFacilities, mapLoaded, coords]);
 
   return (
     <div className="space-y-4">
