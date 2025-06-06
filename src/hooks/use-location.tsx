@@ -21,29 +21,42 @@ export function useLocation(): LocationData {
     };
 
     const buscarPorCoordenadas = async (lat: number, lon: number) => {
+      console.log("📡 Obtendo cidade via coordenadas...");
       setCoords({ lat, lng: lon });
+
       try {
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
         const data = await response.json();
-        const cidade = sanitizeString(data.address?.city || data.address?.town || data.address?.village);
+
+        let cidade = sanitizeString(
+          data.address?.city || data.address?.town || data.address?.village
+        );
+
+        // Correção manual se cidade retornada for genérica/errada
+        if (cidade === "São Cristóvão") {
+          console.warn("⚠️ Cidade incorreta detectada via coordenadas. Substituindo por 'Aracaju'.");
+          cidade = "Aracaju";
+        }
+
         setCity(cidade);
         setError(null);
       } catch (err) {
-        console.warn("🌐 Erro ao converter coordenadas para cidade. Usando IP como fallback.");
-        buscarPorIP();
+        console.warn("🌐 Erro ao converter coordenadas para cidade:", err);
+        setError("Erro ao converter coordenadas para cidade.");
+        // NÃO sobrescreve coords, mantém
       } finally {
         setLoading(false);
       }
     };
 
     const buscarPorIP = async () => {
+      console.warn("📍 Usando localização aproximada por IP...");
       try {
         const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
         const data = await response.json();
         setCity(sanitizeString(data.city));
-        setCoords(null);
+        setCoords(null); // sem coordenadas precisas
         setError("⚠️ Usando localização aproximada por IP");
-        if (import.meta.env.DEV) console.warn("⚠️ Fallback ativado: localização por IP (menos precisa)");
       } catch (err) {
         console.error('❌ Falha ao obter localização por IP:', err);
         setCity("Local Desconhecido");
@@ -55,9 +68,11 @@ export function useLocation(): LocationData {
     };
 
     const obterLocalizacao = () => {
+      console.log("🔍 Tentando obter geolocalização do navegador...");
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            console.log("📍 Coordenadas obtidas:", position.coords);
             buscarPorCoordenadas(position.coords.latitude, position.coords.longitude);
           },
           (err) => {
@@ -73,6 +88,15 @@ export function useLocation(): LocationData {
 
     obterLocalizacao();
   }, []);
+
+  // DEBUG: log de status atual
+  useEffect(() => {
+    console.log("🧭 STATUS DE LOCALIZAÇÃO:");
+    console.log(" - Coordenadas:", coords);
+    console.log(" - Cidade:", city);
+    console.log(" - Erro:", error);
+    console.log(" - Loading:", loading);
+  }, [coords, city, error, loading]);
 
   return { city, coords, loading, error };
 }

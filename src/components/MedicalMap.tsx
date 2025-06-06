@@ -1,184 +1,121 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Loader } from 'lucide-react';
 import { useLocation } from '@/hooks/use-location';
-
-interface Facility {
-  id: number;
-  name: string;
-  type: 'UBS' | 'UPA' | 'Hospital';
-  address: string;
-  distance?: string;
-  waitTime?: string;
-  coordinates?: { lat: number; lng: number };
-}
+import { useNearbyFacilities } from '@/hooks/useNearbyFacilities';
 
 interface MedicalMapProps {
   facilityType: 'UBS' | 'UPA' | 'Hospital';
 }
 
 const MedicalMap = ({ facilityType }: MedicalMapProps) => {
-  const { coords, loading: locationLoading } = useLocation();
+  const { coords, loading: locationLoading, error: locationError } = useLocation();
+  const {
+    facilities,
+    loading: facilitiesLoading,
+    error: facilitiesError
+  } = useNearbyFacilities(facilityType, coords);
+
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const [center, setCenter] = useState<[number, number]>([-37.0677, -10.9091]);
-  const [mapLoaded, setMapLoaded] = useState(false);
 
-  const facilities: Facility[] = [
-    {
-      id: 1, name: 'UBS Vila Nova', type: 'UBS', address: 'Rua das Flores, 123', waitTime: '~30 min',
-      coordinates: { lat: -10.9147, lng: -37.0594 }
-    },
-    {
-      id: 2, name: 'UPA Centro', type: 'UPA', address: 'Av. Principal, 500', waitTime: '~45 min',
-      coordinates: { lat: -10.9213, lng: -37.0669 }
-    },
-    {
-      id: 3, name: 'Hospital São Lucas', type: 'Hospital', address: 'Av. Central, 1000', waitTime: '~60 min',
-      coordinates: { lat: -10.9081, lng: -37.0733 }
-    }
-  ];
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const filteredFacilities = useMemo(() => {
-    if (import.meta.env.DEV) {
-      console.log('📌 facilityType recebido:', facilityType);
-      console.log('📌 Coordenadas do usuário:', coords);
-    }
-
-    if (!coords) {
-      const semCoords = facilities.filter(f => f.type === facilityType);
-      if (import.meta.env.DEV) console.log('⚠️ Sem coordenadas, unidades filtradas:', semCoords);
-      return semCoords;
-    }
-
-    const resultado = facilities
-      .filter(f => f.type === facilityType)
-      .map(f => {
-        if (!f.coordinates) return f;
-        const dist = calculateDistance(coords.lat, coords.lng, f.coordinates.lat, f.coordinates.lng);
-        return {
-          ...f,
-          distance: `${dist.toFixed(1)} km`
-        };
-      })
-      .sort((a, b) => {
-        const da = parseFloat(a.distance || '999');
-        const db = parseFloat(b.distance || '999');
-        return da - db;
-      });
-
-    if (import.meta.env.DEV) console.log('✅ Unidades filtradas com distância:', resultado);
-    return resultado;
-  }, [facilityType, coords]);
-
+  // Inicializa o mapa
   useEffect(() => {
-    if (!mapRef.current && mapContainer.current) {
+    if (!mapRef.current && mapContainer.current && coords) {
       mapRef.current = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://demotiles.maplibre.org/style.json',
-        center: center,
+        center: [coords.lng, coords.lat],
         zoom: 13,
       });
 
       mapRef.current.addControl(new maplibregl.NavigationControl());
-      mapRef.current.on('load', () => setMapLoaded(true));
     }
 
     return () => {
       mapRef.current?.remove();
     };
-  }, []);
-
-  useEffect(() => {
-    if (coords) {
-      setCenter([coords.lng, coords.lat]);
-      mapRef.current?.flyTo({ center: [coords.lng, coords.lat], zoom: 13 });
-    }
   }, [coords]);
 
+  // Marca localização do usuário e unidades
   useEffect(() => {
-    if (mapLoaded && mapRef.current) {
-      const map = mapRef.current;
-      document.querySelectorAll('.custom-marker').forEach(el => el.remove());
+    if (!mapRef.current || !coords) return;
 
-      if (coords) {
-        new maplibregl.Marker({ color: '#3B82F6' })
-          .setLngLat([coords.lng, coords.lat])
-          .setPopup(new maplibregl.Popup().setText('Sua localização'))
-          .addTo(map);
-      }
+    const map = mapRef.current;
+    document.querySelectorAll('.custom-marker').forEach(el => el.remove());
 
-      filteredFacilities.forEach((facility) => {
-        if (!facility.coordinates) {
-          if (import.meta.env.DEV) console.warn(`❌ Unidade "${facility.name}" sem coordenadas`);
-          return;
-        }
+    // 📍 Localização do usuário
+    new maplibregl.Marker({ color: '#3B82F6' })
+      .setLngLat([coords.lng, coords.lat])
+      .setPopup(new maplibregl.Popup().setText('Sua localização'))
+      .addTo(map);
 
-        if (import.meta.env.DEV) console.log('📍 Marcador adicionado:', facility.name);
+    // 🏥 Unidades filtradas
+    facilities.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'custom-marker';
+      el.style.width = '16px';
+      el.style.height = '16px';
+      el.style.backgroundColor =
+        f.tipo === 'UBS' ? '#10B981' : f.tipo === 'UPA' ? '#F59E0B' : '#EF4444';
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+      el.style.cursor = 'pointer';
 
-        const el = document.createElement('div');
-        el.className = 'custom-marker';
-        el.style.width = '16px';
-        el.style.height = '16px';
-        el.style.backgroundColor =
-          facility.type === 'UBS' ? '#10B981' : facility.type === 'UPA' ? '#F59E0B' : '#EF4444';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        el.style.cursor = 'pointer';
+      const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
+        <strong>${f.nome}</strong><br/>
+        ${f.endereco}<br/>
+        Distância: ${f.distancia?.toFixed(1)} km<br/>
+        Espera: ${f.tempo_espera || 'N/A'}
+      `);
 
-        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
-          <strong>${facility.name}</strong><br/>
-          ${facility.address}<br/>
-          ${facility.distance ? `Distância: ${facility.distance}<br/>` : ''}
-          ${facility.waitTime ? `Espera: ${facility.waitTime}` : ''}
-        `);
+      new maplibregl.Marker(el)
+        .setLngLat([f.longitude, f.latitude])
+        .setPopup(popup)
+        .addTo(map);
+    });
 
-        new maplibregl.Marker(el)
-          .setLngLat([facility.coordinates.lng, facility.coordinates.lat])
-          .setPopup(popup)
-          .addTo(map);
-      });
-
-      // ✅ Ajuste automático para enquadrar todos os pontos
-      if (filteredFacilities.length > 0 && coords) {
-        const bounds = new maplibregl.LngLatBounds();
-        bounds.extend([coords.lng, coords.lat]);
-
-        filteredFacilities.forEach(f => {
-          if (f.coordinates) {
-            bounds.extend([f.coordinates.lng, f.coordinates.lat]);
-          }
-        });
-
-        map.fitBounds(bounds, { padding: 60 });
-      }
-    }
-  }, [filteredFacilities, mapLoaded, coords]);
+    // 🗺️ Ajuste de visualização
+    const bounds = new maplibregl.LngLatBounds();
+    bounds.extend([coords.lng, coords.lat]);
+    facilities.forEach(f => bounds.extend([f.longitude, f.latitude]));
+    map.fitBounds(bounds, { padding: 60 });
+  }, [facilities, coords]);
 
   return (
-    <div className="space-y-4">
-      <div className="h-64 bg-gray-100 rounded-lg relative overflow-hidden">
-        {(!mapLoaded || locationLoading) && (
-          <div className="absolute inset-0 bg-gray-200 flex flex-col items-center justify-center z-10">
-            <Loader className="h-6 w-6 animate-spin text-triage-blue mb-2" />
-            <p className="text-gray-500">Carregando mapa...</p>
+    <div className="w-full max-w-5xl mx-auto px-4">
+      <div className="flex flex-col md:flex-row md:gap-6">
+        {/* Mapa */}
+        <div className="md:w-1/2">
+          <div className="h-64 sm:h-80 md:h-96 bg-gray-100 rounded-lg relative overflow-hidden">
+            {(locationLoading || facilitiesLoading) && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 z-10">
+                <Loader className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+                <span>Carregando...</span>
+              </div>
+            )}
+            <div ref={mapContainer} className="h-full w-full" />
           </div>
-        )}
-        <div ref={mapContainer} className="h-full w-full" />
+        </div>
+
+        {/* Lista de unidades */}
+        <div className="mt-6 md:mt-0 md:w-1/2">
+          <h4 className="text-md font-semibold mb-2">Unidades listadas:</h4>
+          <ul className="space-y-2 text-sm">
+            {facilities.map(f => (
+              <li key={f.id} className="p-3 rounded border bg-white shadow-sm">
+                <p className="font-medium">{f.nome}</p>
+                <p>{f.endereco}</p>
+                <p>Distância: {f.distancia?.toFixed(1)} km</p>
+                {f.tempo_espera && <p>Espera: {f.tempo_espera}</p>}
+              </li>
+            ))}
+            {facilities.length === 0 && (
+              <li className="text-gray-500">Nenhuma unidade encontrada para esse tipo.</li>
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );

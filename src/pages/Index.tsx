@@ -65,6 +65,16 @@ const Index = () => {
     localStorage.removeItem("triagemHistorico");
   };
 
+  const tipoRecomendado = (() => {
+    if (!triageResult) return 'UBS';
+    switch (triageResult.severity) {
+      case 'leve': return 'UBS';
+      case 'moderado': return 'UPA';
+      case 'grave': return 'Hospital';
+      default: return 'UBS';
+    }
+  })();
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -72,13 +82,11 @@ const Index = () => {
       <main className="flex-1 container max-w-4xl py-8 px-4">
         {!showResults ? (
           <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-gray-800">Triagem Médica Assistida</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Descreva seus sintomas em detalhes e nossa IA irá analisar a gravidade
-                e sugerir o tipo de atendimento médico mais adequado.
-              </p>
-            </div>
+            <h2 className="text-2xl font-bold text-center text-gray-800">Triagem Médica Assistida</h2>
+            <p className="text-center text-gray-600 max-w-2xl mx-auto">
+              Descreva seus sintomas em detalhes e nossa IA irá analisar a gravidade
+              e sugerir o tipo de atendimento médico mais adequado.
+            </p>
 
             <div className="flex justify-center">
               <EmergencyButton />
@@ -88,7 +96,7 @@ const Index = () => {
               <CardHeader>
                 <CardTitle>Como você prefere informar seus sintomas?</CardTitle>
                 <CardDescription>
-                  Escolha entre digitar ou usar sua voz para descrever o que está sentindo
+                  Escolha entre digitar ou usar sua voz para descrever o que está sentindo.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -101,7 +109,7 @@ const Index = () => {
                     <TabsTrigger value="text">Digitar Sintomas</TabsTrigger>
                     <TabsTrigger value="voice">Usar Voz</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="text" className="space-y-4">
+                  <TabsContent value="text">
                     <SymptomInput onSubmit={handleSymptomSubmission} />
                   </TabsContent>
                   <TabsContent value="voice">
@@ -133,19 +141,12 @@ const Index = () => {
                 </ul>
               </div>
             )}
-
-            <div className="text-center text-sm text-gray-500">
-              <p>
-                Atenção: Este sistema não substitui avaliação médica profissional.
-                Em caso de emergência, ligue imediatamente para 192 (SAMU).
-              </p>
-            </div>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold">Resultado da Triagem</h2>
-              <button 
+              <button
                 onClick={handleReset}
                 className="text-triage-blue hover:underline"
               >
@@ -160,14 +161,14 @@ const Index = () => {
             ) : (
               triageResult && (
                 <>
-                  <TriageResult 
-                    severity={triageResult.severity} 
+                  <TriageResult
+                    severity={triageResult.severity}
                     recommendation={triageResult.recommendation}
                     symptoms={triageResult.symptoms}
                   />
                   <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-2">Unidades próximas:</h3>
-                    <MedicalMap facilityType="UPA" />
+                    <h3 className="text-lg font-semibold mb-2">Unidades próximas recomendadas:</h3>
+                    <MedicalMap facilityType={tipoRecomendado} />
                   </div>
                 </>
               )
@@ -179,8 +180,8 @@ const Index = () => {
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="container max-w-4xl px-4 text-center text-sm text-gray-500">
           <p>
-            © 2025 Medic AI Triagem Pro — 
-            <span className="text-xs"> Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
+            © 2025 Medic AI Triagem Pro —{' '}
+            <span className="text-xs">Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
           </p>
         </div>
       </footer>
