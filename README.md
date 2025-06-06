@@ -52,13 +52,11 @@ Aplicação publicada via Vercel:
 
 ## ✉️ Contato
 
-Desenvolvido por **Marianna Yaskara**
-📧 [marianna.yaskara@live.com](mailto:marianna.yaskara@live.com)
+Desenvolvido por **Marianna Yaskara**  
+📧 [marianna.yaskara@live.com](mailto:marianna.yaskara@live.com)  
 🔗 [https://triagem-medica.vercel.app](https://triagem-medica.vercel.app)
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT.
+Este projeto está licenciado sob a Licença MIT.  
 Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-
