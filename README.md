@@ -1,73 +1,64 @@
-# 🩺 Triagem Médica
+# 🩺 Triagem Médica Inteligente
 
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-blue)](#)
-[![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-green)](LICENSE)
-[![Deploy - Vercel](https://img.shields.io/badge/build-passing-brightgreen?logo=vercel)](https://triagem-medica.vercel.app)
+Aplicação web para triagem médica, que auxilia usuários a identificarem os sintomas e encontrar unidades de saúde próximas com base na gravidade e localização.
 
-Aplicação web para simulação de triagem médica. O usuário informa sintomas, e o sistema classifica a gravidade e recomenda o tipo de atendimento adequado (UBS, UPA ou Hospital), além de exibir unidades próximas no mapa.
+## 🚀 Tecnologias Utilizadas
 
-🔗 **Acesse aqui:** [https://triagem-medica.vercel.app](https://triagem-medica.vercel.app)
+- **React** — UI moderna e interativa  
+- **TypeScript** — segurança de tipos no desenvolvimento  
+- **Vite** — empacotamento rápido e eficiente  
+- **Tailwind CSS** — estilização responsiva e produtiva  
+- **Supabase** — banco de dados e autenticação  
+- **MapLibre GL JS** — mapa interativo open-source  
+- **Lucide Icons** — ícones elegantes
 
----
+## 🛠️ Como rodar localmente
 
-## 📚 Sumário
+```bash
+git clone https://github.com/mariannayaskaras/triagem-medica.git
+cd triagem-medica
+npm install
+````
 
-- [🚀 Funcionalidades](#-funcionalidades)
-- [🛠️ Tecnologias](#️-tecnologias)
-- [🏗️ Arquitetura do Projeto](#️-arquitetura-do-projeto)
-- [📌 Aviso](#-aviso)
-- [✉️ Contato](#️-contato)
-- [📄 Licença](#-licença)
+Crie um arquivo chamado `.env` na raiz do projeto com o seguinte conteúdo:
 
----
+```env
+VITE_SUPABASE_URL=https://<SEU_PROJETO>.supabase.co
+VITE_SUPABASE_ANON_KEY=<SUA_ANON_KEY_DO_SUPABASE>
+```
 
-## 🚀 Funcionalidades
+E então rode a aplicação:
 
-- Classificação de sintomas em baixa, média ou alta severidade.
-- Recomendações baseadas na gravidade.
-- Exibição de unidades de saúde próximas via Google Maps.
-- Botão de emergência em casos graves.
-- Armazenamento de dados da triagem no Supabase.
+```bash
+npm run dev
+```
 
----
+Acesse em: [http://localhost:5173](http://localhost:5173)
 
-## 🛠️ Tecnologias
+## 🌎 Deploy
 
-- **React + TypeScript**
-- **Vite**
-- **Tailwind CSS**
-- **Supabase**
-- **Google Maps API**
-- **Lucide Icons**
+Aplicação publicada via Vercel:
+🔗 [https://triagem-medica.vercel.app](https://triagem-medica.vercel.app)
 
----
+## 📋 Funcionalidades
 
-## 🏗️ Arquitetura do Projeto
-
-A estrutura básica do projeto é modular e desacoplada para facilitar manutenção e escalabilidade:
-
-
-- **Gerenciamento de estado**: Simples e local (useState/useContext).
-- **API**: Supabase para persistência de dados e autenticação.
-- **Mapas**: Google Maps renderizado com markers dinâmicos.
-- **Estilo**: Tailwind CSS para agilidade no desenvolvimento responsivo.
-
----
-
-## 📌 Aviso
-
-Este sistema é uma simulação e **não substitui atendimento médico profissional**.
-
----
+* 🎙 Entrada de sintomas via texto ou voz
+* 🤖 Análise de sintomas com IA simulada
+* 📍 Detecção automática da localização do usuário
+* 🏥 Listagem das unidades mais próximas com base na gravidade
+* 🗺️ Visualização de unidades no mapa com popups informativos
+* ⏱️ Estimativa de tempo de espera por unidade
+* 💾 Histórico de triagens armazenado no navegador
 
 ## ✉️ Contato
 
-Desenvolvido por **Marianna Yaskara**  
-📧 [marianna.yaskara@live.com](mailto:marianna.yaskara@live.com)  
-🔗 [triagem-medica.vercel.app](https://triagem-medica.vercel.app)
-
----
+Desenvolvido por **Marianna Yaskara**
+📧 [marianna.yaskara@live.com](mailto:marianna.yaskara@live.com)
+🔗 [https://triagem-medica.vercel.app](https://triagem-medica.vercel.app)
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está licenciado sob a Licença MIT.
+Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+
