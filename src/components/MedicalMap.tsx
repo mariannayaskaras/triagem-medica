@@ -21,7 +21,9 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (!mapRef.current && mapContainer.current && coords) {
+    if (!coords || !mapContainer.current) return;
+
+    if (!mapRef.current) {
       mapRef.current = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://demotiles.maplibre.org/style.json',
@@ -30,19 +32,19 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
       });
 
       mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+      mapRef.current.on('load', () => {
+        facilities.forEach(facility => {
+          new maplibregl.Marker()
+            .setLngLat([facility.longitude, facility.latitude])
+            .setPopup(new maplibregl.Popup().setHTML(
+              `<strong>${facility.nome}</strong><br/>${facility.tipo}<br/>${facility.distancia?.toFixed(2)} km`
+            ))
+            .addTo(mapRef.current!);
+        });
+      });
     }
-  }, [coords]);
-
-  useEffect(() => {
-    if (!mapRef.current || !facilities) return;
-
-    facilities.forEach(facility => {
-      new maplibregl.Marker()
-        .setLngLat([facility.longitude, facility.latitude])
-        .setPopup(new maplibregl.Popup().setHTML(`<strong>${facility.nome}</strong><br/>${facility.tipo}<br/>${facility.distancia?.toFixed(2)} km`))
-        .addTo(mapRef.current!);
-    });
-  }, [facilities]);
+  }, [coords, facilities]);
 
   if (locationLoading || facilitiesLoading) {
     return <div className="p-4 text-center"><Loader className="animate-spin inline-block" /> Carregando mapa...</div>;
@@ -57,5 +59,4 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   );
 };
 
-export default MedicalMap
-
+export default MedicalMap;
