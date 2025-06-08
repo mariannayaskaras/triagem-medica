@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 
 export interface Facility {
@@ -10,7 +11,7 @@ export interface Facility {
 }
 
 export function useNearbyFacilities(
-  tipos: string[], // ex: ['hospital', 'clinic']
+  tipos: string[], // ex: ['hospital', 'clinic', 'pharmacy']
   userCoords: { lat: number; lng: number } | null
 ) {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -27,7 +28,7 @@ export function useNearbyFacilities(
 [out:json][timeout:25];
 node
   ["amenity"~"${tipos.join('|')}"]
-  (around:5000, ${userCoords.lat}, ${userCoords.lng});
+  (around:15000, ${userCoords.lat}, ${userCoords.lng});
 out center;
         `.trim();
 
@@ -37,6 +38,7 @@ out center;
         });
 
         const json = await res.json();
+        console.log("📦 Resposta da Overpass API:", json);
 
         const toRad = (value: number) => (value * Math.PI) / 180;
         const calcDist = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -59,8 +61,8 @@ out center;
           distancia: calcDist(userCoords.lat, userCoords.lng, e.lat, e.lon),
         }));
 
-        // Ordena por distância e pega até 10 mais próximas
         const ordenadas = parsed.sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0)).slice(0, 10);
+        console.log("📍 Facilities recebidas:", ordenadas);
         setFacilities(ordenadas);
         setError(null);
       } catch (err) {
