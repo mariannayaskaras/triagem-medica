@@ -1,43 +1,42 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
 
 export interface Facility {
-  id: string;
+  id: number;
   nome: string;
-  tipo: 'UBS' | 'UPA' | 'Hospital';
-  endereco: string;
-  cidade?: string;
+  tipo: string;
   latitude: number;
   longitude: number;
-  tempo_espera?: string;
   distancia?: number;
 }
 
 export function useNearbyFacilities(
-  tipo: 'UBS' | 'UPA' | 'Hospital',
+  tipos: string[], // ex: ['hospital', 'clinic']
   userCoords: { lat: number; lng: number } | null
 ) {
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userCoords) return;
 
-    const fetchData = async () => {
+    const fetchFacilities = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('unidades_saude')
-          .select('*')
-          .eq('tipo', tipo);
+        const query = `
+[out:json][timeout:25];
+node
+  ["amenity"~"${tipos.join('|')}"]
+  (around:5000, ${userCoords.lat}, ${userCoords.lng});
+out center;
+        `.trim();
 
-        if (error) throw error;
+        const res = await fetch('https://overpass-api.de/api/interpreter', {
+          method: 'POST',
+          body: query,
+        });
+
+        const json = await res.json();
 
         const toRad = (value: number) => (value * Math.PI) / 180;
         const calcDist = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -51,22 +50,29 @@ export function useNearbyFacilities(
           return R * c;
         };
 
-        const withDistance = (data || []).map((f) => ({
-          ...f,
-          distancia: calcDist(userCoords.lat, userCoords.lng, f.latitude, f.longitude),
+        const parsed: Facility[] = (json.elements || []).map((e: any) => ({
+          id: e.id,
+          nome: e.tags?.name || e.tags?.amenity || 'Unidade de Saúde',
+          tipo: e.tags?.amenity || 'desconhecido',
+          latitude: e.lat,
+          longitude: e.lon,
+          distancia: calcDist(userCoords.lat, userCoords.lng, e.lat, e.lon),
         }));
 
-        setFacilities(withDistance.sort((a, b) => a.distancia! - b.distancia!));
+        // Ordena por distância e pega até 10 mais próximas
+        const ordenadas = parsed.sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0)).slice(0, 10);
+        setFacilities(ordenadas);
         setError(null);
       } catch (err) {
-        setError('Erro ao buscar unidades.');
+        console.error(err);
+        setError('Erro ao buscar unidades via OpenStreetMap.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [tipo, userCoords]);
+    fetchFacilities();
+  }, [tipos, userCoords]);
 
   return { facilities, loading, error };
 }
