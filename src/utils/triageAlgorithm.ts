@@ -7,6 +7,10 @@ interface TriageResult {
 }
 
 export function analyzeSymptoms(input: string): TriageResult {
+  if (typeof input !== 'string') {
+    throw new Error('Entrada inválida para análise de sintomas.');
+  }
+
   const normalized = input.toLowerCase();
   const symptoms = normalized
     .split(/,|e|\n|\./)
@@ -45,7 +49,7 @@ export function analyzeSymptoms(input: string): TriageResult {
     severity = 'moderado';
   }
 
-  const recommendationMap = {
+  const recommendationMap: Record<SeverityLevel, string> = {
     leve: 'Seus sintomas indicam uma condição leve. Procure uma UBS se necessário.',
     moderado:
       'Seus sintomas podem necessitar de cuidados em uma UPA. Recomendamos atendimento em até 24h.',

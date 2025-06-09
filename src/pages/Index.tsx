@@ -27,8 +27,11 @@ const Index = () => {
     return stored ? JSON.parse(stored) : [];
   });
 
-  const handleSymptomSubmission = (symptomText: string) => {
-    if (symptomText.trim().length < 10) {
+  // ✅ Corrigido para aceitar array de strings
+  const handleSymptomSubmission = (symptomList: string[]) => {
+    const symptomText = symptomList.map(s => s.trim()).filter(Boolean).join(', ');
+
+    if (symptomText.length < 10) {
       alert('Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).');
       return;
     }

@@ -29,8 +29,8 @@ export function useLocation(): LocationData {
         const data = await response.json();
 
         let cidade = sanitizeString(
-          data.address?.city || data.address?.town || data.address?.village || ''
-        );
+  data.address?.city || data.address?.town || data.address?.village || data.address?.county || "Local Desconhecido"
+);
 
         // Correção manual
         if (cidade === "São Cristóvão") {
