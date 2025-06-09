@@ -45,8 +45,8 @@ const colorClasses = {
 };
 
 const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps) => {
-  const config = colorClasses[severity];
-  const Icon = config?.icon;
+  const config = colorClasses[severity] ?? null;
+  const Icon = config?.icon ?? null;
 
   useEffect(() => {
     const salvarTriagem = async () => {
@@ -54,15 +54,14 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
 
       const triagemData = {
         sintomas: symptoms,
-        resultado: config.title,
+        resultado: config?.title,
         data_hora,
         recomendacao: recommendation
       };
 
       if (import.meta.env.DEV) {
-  console.log("📤 Enviando triagem para Supabase:", triagemData);
-}
-
+        console.log("📤 Enviando triagem para Supabase:", triagemData);
+      }
 
       const { error } = await supabase.from('triagem-medica').insert([triagemData]);
 
@@ -71,54 +70,59 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
       }
     };
 
-    salvarTriagem();
-  }, [config.title, recommendation, symptoms]);
+    if (config) {
+      salvarTriagem();
+    }
+  }, [config, recommendation, symptoms]);
 
   return (
-  <div className="space-y-6">
-    <Card className={`border-2 ${config?.border}`}>
-      <CardHeader className={config?.bg}>
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className={`h-6 w-6 ${config.text}`} />}
-          <CardTitle className={config?.text}>{config?.title}</CardTitle>
-        </div>
-        <CardDescription>{config?.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6 space-y-4">
-        <div>
-          <h3 className="font-medium mb-2">Sintomas identificados:</h3>
-          <ul className="list-disc pl-5 space-y-1">
-            {symptoms.map((symptom, index) => (
-              <li key={index}>{symptom}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="font-medium mb-2">Recomendação:</h3>
-          <p>{recommendation}</p>
-        </div>
-
-        {severity === 'high' && (
-          <div className="flex justify-center py-2">
-            <EmergencyButton />
+    <div className="space-y-6">
+      <Card className={`border-2 ${config?.border}`}>
+        <CardHeader className={config?.bg}>
+          <div className="flex items-center gap-2">
+            {Icon ? <Icon className={`h-6 w-6 ${config.text}`} /> : null}
+            <CardTitle className={config?.text}>{config?.title}</CardTitle>
           </div>
-        )}
-      </CardContent>
-    </Card>
-
-    {severity !== 'high' && (
-      <Card>
-        <CardHeader>
-          <CardTitle>Unidades de saúde próximas</CardTitle>
-          <CardDescription>
-            Baseado na sua localização atual, encontramos estas opções
-          </CardDescription>
+          <CardDescription>{config?.description}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <MedicalMap facilityType={config?.facilityType || 'clinic'} />
+        <CardContent className="pt-6 space-y-4">
+          <div>
+            <h3 className="font-medium mb-2">Sintomas identificados:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {symptoms.map((symptom, index) => (
+                <li key={index}>{symptom}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-medium mb-2">Recomendação:</h3>
+            <p>{recommendation}</p>
+          </div>
+
+          {severity === 'high' && (
+            <div className="flex justify-center py-2">
+              <EmergencyButton />
+            </div>
+          )}
         </CardContent>
       </Card>
-    )}
-  </div>
-);
+
+      {severity !== 'high' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Unidades de saúde próximas</CardTitle>
+            <CardDescription>
+              Baseado na sua localização atual, encontramos estas opções
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MedicalMap facilityType={config?.facilityType || 'clinic'} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default TriageResult;
