@@ -6,7 +6,7 @@ import { useLocation } from '@/hooks/use-location';
 import { useNearbyFacilities } from '@/hooks/useNearbyFacilities';
 
 interface MedicalMapProps {
-  facilityType: 'hospital' | 'clinic' | 'doctors';
+  facilityType: string; // ou restrito a valores que você usa no algoritmo
 }
 
 const MedicalMap = ({ facilityType }: MedicalMapProps) => {
@@ -28,35 +28,45 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
         container: mapContainer.current,
         style: 'https://demotiles.maplibre.org/style.json',
         center: [coords.lng, coords.lat],
-        zoom: 13,
+        zoom: 13
       });
 
-      mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-      mapRef.current.on('load', () => {
-        facilities.forEach(facility => {
-          new maplibregl.Marker()
-            .setLngLat([facility.longitude, facility.latitude])
-            .setPopup(new maplibregl.Popup().setHTML(
-              `<strong>${facility.nome}</strong><br/>${facility.tipo}<br/>${facility.distancia?.toFixed(2)} km`
-            ))
-            .addTo(mapRef.current!);
-        });
-      });
+      new maplibregl.Marker({ color: '#007cbf' })
+        .setLngLat([coords.lng, coords.lat])
+        .setPopup(new maplibregl.Popup().setText('Sua localização'))
+        .addTo(mapRef.current);
     }
-  }, [coords, facilities]);
+  }, [coords]);
+
+  useEffect(() => {
+    if (!mapRef.current || !facilities) return;
+
+    facilities.forEach(facility => {
+      new maplibregl.Marker()
+        .setLngLat([facility.longitude, facility.latitude])
+        .setPopup(
+          new maplibregl.Popup({ offset: 25 }).setText(
+            `${facility.nome} (${facility.tipo})`
+          )
+        )
+        .addTo(mapRef.current!);
+    });
+  }, [facilities]);
 
   if (locationLoading || facilitiesLoading) {
-    return <div className="p-4 text-center"><Loader className="animate-spin inline-block" /> Carregando mapa...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader className="animate-spin" />
+      </div>
+    );
   }
 
   if (locationError || facilitiesError) {
-    return <div className="p-4 text-red-500">Erro: {locationError || facilitiesError}</div>;
+    return <div className="text-red-500">Erro ao carregar o mapa ou unidades.</div>;
   }
 
-  return (
-    <div className="w-full h-[400px]" ref={mapContainer} />
-  );
+  return <div ref={mapContainer} className="w-full h-96 rounded-md shadow-md" />;
 };
 
 export default MedicalMap;
+

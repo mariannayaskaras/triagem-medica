@@ -23,13 +23,13 @@ const Index = () => {
   const [triageHistory, setTriageHistory] = useState<
     { date: string; symptoms: string; recommendation: string }[]
   >(() => {
-    const stored = localStorage.getItem("triagemHistorico");
+    const stored = localStorage.getItem('triagemHistorico');
     return stored ? JSON.parse(stored) : [];
   });
 
   const handleSymptomSubmission = (symptomText: string) => {
     if (symptomText.trim().length < 10) {
-      alert("Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).");
+      alert('Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).');
       return;
     }
 
@@ -50,7 +50,7 @@ const Index = () => {
 
       const novoHistorico = [novaEntrada, ...triageHistory];
       setTriageHistory(novoHistorico);
-      localStorage.setItem("triagemHistorico", JSON.stringify(novoHistorico));
+      localStorage.setItem('triagemHistorico', JSON.stringify(novoHistorico));
     }, 1500);
   };
 
@@ -62,7 +62,7 @@ const Index = () => {
 
   const clearHistory = () => {
     setTriageHistory([]);
-    localStorage.removeItem("triagemHistorico");
+    localStorage.removeItem('triagemHistorico');
   };
 
   const tipoRecomendado = (() => {
