@@ -25,25 +25,24 @@ export function useLocation(): LocationData {
       setCoords({ lat, lng: lon });
 
       try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
         const data = await response.json();
 
         let cidade = sanitizeString(
-          data.address?.city || data.address?.town || data.address?.village
+          data.address?.city || data.address?.town || data.address?.village || ''
         );
 
-        // Correção manual se cidade retornada for genérica/errada
+        // Correção manual
         if (cidade === "São Cristóvão") {
           console.warn("⚠️ Cidade incorreta detectada via coordenadas. Substituindo por 'Aracaju'.");
           cidade = "Aracaju";
         }
 
-        setCity(cidade);
+        setCity(cidade || "Local Desconhecido");
         setError(null);
       } catch (err) {
         console.warn("🌐 Erro ao converter coordenadas para cidade:", err);
         setError("Erro ao converter coordenadas para cidade.");
-        // NÃO sobrescreve coords, mantém
       } finally {
         setLoading(false);
       }
@@ -79,7 +78,7 @@ export function useLocation(): LocationData {
             console.warn("🚫 Geolocalização negada. Usando IP como fallback:", err.message);
             buscarPorIP();
           },
-          { timeout: 8000 }
+          { timeout: 8000, maximumAge: 60000 }
         );
       } else {
         buscarPorIP();
@@ -89,7 +88,6 @@ export function useLocation(): LocationData {
     obterLocalizacao();
   }, []);
 
-  // DEBUG: log de status atual
   useEffect(() => {
     console.log("🧭 STATUS DE LOCALIZAÇÃO:");
     console.log(" - Coordenadas:", coords);

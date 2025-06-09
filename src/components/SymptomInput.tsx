@@ -1,47 +1,49 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface SymptomInputProps {
-  onSubmit: (symptoms: string) => void;
+  onSubmit: (symptoms: string[]) => void;
 }
 
 const SymptomInput = ({ onSubmit }: SymptomInputProps) => {
   const [symptoms, setSymptoms] = useState('');
   const [error, setError] = useState('');
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Security: Validate input
+
     if (!symptoms.trim()) {
       setError('Por favor, descreva seus sintomas.');
       return;
     }
-    
+
     if (symptoms.length > 2000) {
       setError('Descrição muito longa. Máximo de 2000 caracteres.');
       return;
     }
-    
-    // Security: Basic validation for suspicious content
+
     const suspiciousPatterns = [/<script/i, /javascript:/i, /on\w+\s*=/i];
     if (suspiciousPatterns.some(pattern => pattern.test(symptoms))) {
       setError('Conteúdo inválido detectado. Por favor, descreva apenas seus sintomas médicos.');
       return;
     }
-    
-    onSubmit(symptoms.trim());
+
+    // 🔥 Aqui a separação inteligente dos sintomas
+    const parsedSymptoms = symptoms
+      .split(/,|;|\n/)      // quebra por vírgulas, ponto-e-vírgula e nova linha
+      .map(s => s.trim())   // remove espaços
+      .filter(Boolean);     // remove vazios
+
+    onSubmit(parsedSymptoms);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setSymptoms(value);
     setError('');
-    
-    // Show character count warning
+
     if (value.length > 1900) {
       setError(`${2000 - value.length} caracteres restantes`);
     }
@@ -68,8 +70,8 @@ const SymptomInput = ({ onSubmit }: SymptomInputProps) => {
         </div>
       </div>
       <div className="flex justify-end">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="bg-triage-blue hover:bg-blue-600 text-white"
           disabled={!symptoms.trim() || symptoms.length > 2000 || !!error}
         >

@@ -10,7 +10,7 @@ export interface Facility {
 }
 
 export function useNearbyFacilities(
-  tipos: string[], // ex: ['hospital', 'clinic', 'pharmacy']
+  tipos: string[],
   userCoords: { lat: number; lng: number } | null
 ) {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -18,7 +18,15 @@ export function useNearbyFacilities(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userCoords) return;
+    const amenityMap: Record<string, string[]> = {
+      ubs: ['clinic', 'doctors'],
+      upa: ['clinic', 'hospital'],
+      hospital: ['hospital'],
+    };
+
+    const amenityTypes = tipos.flatMap(tipo => amenityMap[tipo] || []);
+
+    if (!userCoords || !amenityTypes.length) return;
 
     const fetchFacilities = async () => {
       setLoading(true);
@@ -26,7 +34,7 @@ export function useNearbyFacilities(
         const query = `
 [out:json][timeout:25];
 node
-  ["amenity"~"${tipos.join('|')}"]
+  ["amenity"~"${amenityTypes.join('|')}"]
   (around:15000, ${userCoords.lat}, ${userCoords.lng});
 out body;
         `.trim();
@@ -60,4 +68,3 @@ out body;
 
   return { facilities, loading, error };
 }
-

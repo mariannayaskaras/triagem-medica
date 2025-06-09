@@ -6,7 +6,7 @@ import { useLocation } from '@/hooks/use-location';
 import { useNearbyFacilities } from '@/hooks/useNearbyFacilities';
 
 interface MedicalMapProps {
-  facilityType: string; // pode vir como "UBS", "Hospital", etc.
+  facilityType: string; // Ex: "UBS", "Hospital"
 }
 
 const MedicalMap = ({ facilityType }: MedicalMapProps) => {
@@ -16,41 +16,49 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
     facilities,
     loading: facilitiesLoading,
     error: facilitiesError
-  } = useNearbyFacilities([facilityType.toLowerCase()], coords);
+  } = useNearbyFacilities([facilityType?.toLowerCase() || 'ubs'], coords);
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
-    if (!coords || !mapContainer.current) return;
+    if (!coords || !mapContainer.current || mapRef.current) return;
 
-    if (!mapRef.current) {
-      mapRef.current = new maplibregl.Map({
-        container: mapContainer.current,
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [coords.lng, coords.lat],
-        zoom: 13
-      });
+    const map = new maplibregl.Map({
+      container: mapContainer.current,
+      style: 'https://demotiles.maplibre.org/style.json',
+      center: [coords.lng, coords.lat],
+      zoom: 13
+    });
 
-      new maplibregl.Marker({ color: '#007cbf' })
-        .setLngLat([coords.lng, coords.lat])
-        .setPopup(new maplibregl.Popup().setText('Sua localização'))
-        .addTo(mapRef.current);
-    }
+    mapRef.current = map;
+
+    // marcador da localização atual
+    new maplibregl.Marker({ color: '#007cbf' })
+      .setLngLat([coords.lng, coords.lat])
+      .setPopup(new maplibregl.Popup().setText('Sua localização'))
+      .addTo(map);
+
+    return () => {
+      map.remove(); // limpa mapa se o componente for desmontado
+      mapRef.current = null;
+    };
   }, [coords]);
 
   useEffect(() => {
-    if (!mapRef.current || !facilities) return;
+    if (!mapRef.current || !facilities?.length) return;
 
     facilities.forEach(facility => {
-      new maplibregl.Marker()
-        .setLngLat([facility.longitude, facility.latitude])
-        .setPopup(
-          new maplibregl.Popup({ offset: 25 }).setText(
-            `${facility.nome} (${facility.tipo})`
+      if (facility.longitude && facility.latitude) {
+        new maplibregl.Marker()
+          .setLngLat([facility.longitude, facility.latitude])
+          .setPopup(
+            new maplibregl.Popup({ offset: 25 }).setText(
+              `${facility.nome} (${facility.tipo})`
+            )
           )
-        )
-        .addTo(mapRef.current!);
+          .addTo(mapRef.current!);
+      }
     });
   }, [facilities]);
 
@@ -63,7 +71,11 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   }
 
   if (locationError || facilitiesError) {
-    return <div className="text-red-500">Erro ao carregar o mapa ou unidades.</div>;
+    return (
+      <div className="text-red-500">
+        Erro ao carregar o mapa ou unidades próximas. Verifique permissões de localização.
+      </div>
+    );
   }
 
   return <div ref={mapContainer} className="w-full h-96 rounded-md shadow-md" />;
