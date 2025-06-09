@@ -6,16 +6,17 @@ import { useLocation } from '@/hooks/use-location';
 import { useNearbyFacilities } from '@/hooks/useNearbyFacilities';
 
 interface MedicalMapProps {
-  facilityType: string; // ou restrito a valores que você usa no algoritmo
+  facilityType: string; // pode vir como "UBS", "Hospital", etc.
 }
 
 const MedicalMap = ({ facilityType }: MedicalMapProps) => {
   const { coords, loading: locationLoading, error: locationError } = useLocation();
+
   const {
     facilities,
     loading: facilitiesLoading,
     error: facilitiesError
-  } = useNearbyFacilities([facilityType], coords);
+  } = useNearbyFacilities([facilityType.toLowerCase()], coords);
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -69,4 +70,3 @@ const MedicalMap = ({ facilityType }: MedicalMapProps) => {
 };
 
 export default MedicalMap;
-
