@@ -1,7 +1,7 @@
 export type SeverityLevel = 'leve' | 'moderado' | 'grave';
 
 interface TriageResult {
-  severity: SeverityLevel;
+  severity: 'low' | 'medium' | 'high';
   symptoms: string[];
   recommendation: string;
 }
@@ -13,7 +13,7 @@ export function analyzeSymptoms(input: string): TriageResult {
 
   const normalized = input.toLowerCase();
   const symptoms = normalized
-    .split(/,|e|\n|\./)
+    .split(/,|;|\n|\./) // ✅ Removido o "e" como separador
     .map((s) => s.trim())
     .filter(Boolean);
 
@@ -41,7 +41,7 @@ export function analyzeSymptoms(input: string): TriageResult {
     'dor nas costas',
   ];
 
-  let severity: SeverityLevel = 'leve';
+  let severity: 'leve' | 'moderado' | 'grave' = 'leve';
 
   if (symptoms.some((s) => graveKeywords.some((k) => s.includes(k)))) {
     severity = 'grave';
@@ -49,16 +49,20 @@ export function analyzeSymptoms(input: string): TriageResult {
     severity = 'moderado';
   }
 
-  const recommendationMap: Record<SeverityLevel, string> = {
+  const recommendationMap: Record<'leve' | 'moderado' | 'grave', string> = {
     leve: 'Seus sintomas indicam uma condição leve. Procure uma UBS se necessário.',
-    moderado:
-      'Seus sintomas podem necessitar de cuidados em uma UPA. Recomendamos atendimento em até 24h.',
-    grave:
-      'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância imediatamente pelo número 192 (SAMU).',
+    moderado: 'Seus sintomas podem necessitar de cuidados em uma UPA. Recomendamos atendimento em até 24h.',
+    grave: 'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância imediatamente pelo número 192 (SAMU).',
   };
 
+  const severityMap = {
+    leve: 'low',
+    moderado: 'medium',
+    grave: 'high',
+  } as const;
+
   return {
-    severity,
+    severity: severityMap[severity],
     symptoms,
     recommendation: recommendationMap[severity],
   };

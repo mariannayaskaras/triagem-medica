@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import Header from '@/components/Header';
 import SymptomInput from '@/components/SymptomInput';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import TriageResult, { SeverityLevel } from '@/components/TriageResult';
 import EmergencyButton from '@/components/EmergencyButton';
 import { analyzeSymptoms } from '@/utils/triageAlgorithm';
-import MedicalMap from '@/components/MedicalMap';
 
 const Index = () => {
   const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
-  const [symptoms, setSymptoms] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [triageResult, setTriageResult] = useState<{
@@ -27,16 +36,14 @@ const Index = () => {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // ✅ Corrigido para aceitar array de strings
   const handleSymptomSubmission = (symptomList: string[]) => {
-    const symptomText = symptomList.map(s => s.trim()).filter(Boolean).join(', ');
+    const symptomText = symptomList.map((s) => s.trim()).filter(Boolean).join(', ');
 
     if (symptomText.length < 10) {
       alert('Por favor, descreva os sintomas com mais detalhes (mínimo 10 caracteres).');
       return;
     }
 
-    setSymptoms(symptomText);
     setIsLoading(true);
 
     setTimeout(() => {
@@ -48,7 +55,7 @@ const Index = () => {
       const novaEntrada = {
         date: new Date().toLocaleString(),
         symptoms: symptomText,
-        recommendation: result.recommendation,
+        recommendation: result.recommendation
       };
 
       const novoHistorico = [novaEntrada, ...triageHistory];
@@ -59,7 +66,6 @@ const Index = () => {
 
   const handleReset = () => {
     setShowResults(false);
-    setSymptoms('');
     setTriageResult(null);
   };
 
@@ -67,16 +73,6 @@ const Index = () => {
     setTriageHistory([]);
     localStorage.removeItem('triagemHistorico');
   };
-
-  const tipoRecomendado = (() => {
-    if (!triageResult) return 'UBS';
-    switch (triageResult.severity) {
-      case 'leve': return 'UBS';
-      case 'moderado': return 'UPA';
-      case 'grave': return 'Hospital';
-      default: return 'UBS';
-    }
-  })();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -163,17 +159,11 @@ const Index = () => {
               </div>
             ) : (
               triageResult && (
-                <>
-                  <TriageResult
-                    severity={triageResult.severity}
-                    recommendation={triageResult.recommendation}
-                    symptoms={triageResult.symptoms}
-                  />
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-2">Unidades próximas recomendadas:</h3>
-                    <MedicalMap facilityType={tipoRecomendado} />
-                  </div>
-                </>
+                <TriageResult
+                  severity={triageResult.severity}
+                  recommendation={triageResult.recommendation}
+                  symptoms={triageResult.symptoms}
+                />
               )
             )}
           </div>
@@ -184,7 +174,9 @@ const Index = () => {
         <div className="container max-w-4xl px-4 text-center text-sm text-gray-500">
           <p>
             © 2025 Medic AI Triagem Pro —{' '}
-            <span className="text-xs">Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional</span>
+            <span className="text-xs">
+              Este é um sistema de avaliação preliminar e não substitui atendimento médico profissional
+            </span>
           </p>
         </div>
       </footer>
