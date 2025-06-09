@@ -1,4 +1,3 @@
-
 export type SeverityLevel = 'leve' | 'moderado' | 'grave';
 
 interface TriageResult {
@@ -9,24 +8,49 @@ interface TriageResult {
 
 export function analyzeSymptoms(input: string): TriageResult {
   const normalized = input.toLowerCase();
-  const symptoms = normalized.split(/,|e|\\n|\\./).map(s => s.trim()).filter(Boolean);
+  const symptoms = normalized
+    .split(/,|e|\n|\./)
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  const graveKeywords = ['inconsciência', 'desmaio', 'dor no peito', 'dificuldade para respirar', 'hemorragia', 'convulsão'];
-  const moderadoKeywords = ['febre alta', 'dor intensa', 'queda', 'fratura', 'vômito constante'];
-  const leveKeywords = ['dor de cabeça', 'coriza', 'tosse', 'garganta', 'náusea', 'dor nas costas'];
+  const graveKeywords = [
+    'inconsciência',
+    'desmaio',
+    'dor no peito',
+    'dificuldade para respirar',
+    'hemorragia',
+    'convulsão',
+  ];
+  const moderadoKeywords = [
+    'febre alta',
+    'dor intensa',
+    'queda',
+    'fratura',
+    'vômito constante',
+  ];
+  const leveKeywords = [
+    'dor de cabeça',
+    'coriza',
+    'tosse',
+    'garganta',
+    'náusea',
+    'dor nas costas',
+  ];
 
   let severity: SeverityLevel = 'leve';
 
-  if (symptoms.some(s => graveKeywords.some(k => s.includes(k)))) {
+  if (symptoms.some((s) => graveKeywords.some((k) => s.includes(k)))) {
     severity = 'grave';
-  } else if (symptoms.some(s => moderadoKeywords.some(k => s.includes(k)))) {
+  } else if (symptoms.some((s) => moderadoKeywords.some((k) => s.includes(k)))) {
     severity = 'moderado';
   }
 
   const recommendationMap = {
     leve: 'Seus sintomas indicam uma condição leve. Procure uma UBS se necessário.',
-    moderado: 'Seus sintomas podem necessitar de cuidados em uma UPA. Recomendamos atendimento em até 24h.',
-    grave: 'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância imediatamente pelo número 192 (SAMU).',
+    moderado:
+      'Seus sintomas podem necessitar de cuidados em uma UPA. Recomendamos atendimento em até 24h.',
+    grave:
+      'Seus sintomas indicam uma possível emergência médica. Recomendamos chamar uma ambulância imediatamente pelo número 192 (SAMU).',
   };
 
   return {
@@ -35,9 +59,3 @@ export function analyzeSymptoms(input: string): TriageResult {
     recommendation: recommendationMap[severity],
   };
 }
-"""
-
-# Escrever o novo algoritmo no arquivo
-with open(triage_algorithm_path, "w", encoding="utf-8") as f:
-    f.write(improved_triage_algorithm)
-
