@@ -116,7 +116,6 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <MedicalMap facilityType={config.facilityType} />
           </CardContent>
         </Card>
       )}
