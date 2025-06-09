@@ -46,7 +46,7 @@ const colorClasses = {
 
 const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps) => {
   const config = colorClasses[severity];
-  const Icon = config.icon;
+  const Icon = config?.icon;
 
   useEffect(() => {
     const salvarTriagem = async () => {
@@ -75,52 +75,50 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
   }, [config.title, recommendation, symptoms]);
 
   return (
-    <div className="space-y-6">
-      <Card className={`border-2 ${config.border}`}>
-        <CardHeader className={config.bg}>
-          <div className="flex items-center gap-2">
-            <Icon className={`h-6 w-6 ${config.text}`} />
-            <CardTitle className={config.text}>{config.title}</CardTitle>
+  <div className="space-y-6">
+    <Card className={`border-2 ${config?.border}`}>
+      <CardHeader className={config?.bg}>
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className={`h-6 w-6 ${config.text}`} />}
+          <CardTitle className={config?.text}>{config?.title}</CardTitle>
+        </div>
+        <CardDescription>{config?.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6 space-y-4">
+        <div>
+          <h3 className="font-medium mb-2">Sintomas identificados:</h3>
+          <ul className="list-disc pl-5 space-y-1">
+            {symptoms.map((symptom, index) => (
+              <li key={index}>{symptom}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-medium mb-2">Recomendação:</h3>
+          <p>{recommendation}</p>
+        </div>
+
+        {severity === 'high' && (
+          <div className="flex justify-center py-2">
+            <EmergencyButton />
           </div>
-          <CardDescription>{config.description}</CardDescription>
+        )}
+      </CardContent>
+    </Card>
+
+    {severity !== 'high' && (
+      <Card>
+        <CardHeader>
+          <CardTitle>Unidades de saúde próximas</CardTitle>
+          <CardDescription>
+            Baseado na sua localização atual, encontramos estas opções
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6 space-y-4">
-          <div>
-            <h3 className="font-medium mb-2">Sintomas identificados:</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {symptoms.map((symptom, index) => (
-                <li key={index}>{symptom}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-medium mb-2">Recomendação:</h3>
-            <p>{recommendation}</p>
-          </div>
-
-          {severity === 'high' && (
-            <div className="flex justify-center py-2">
-              <EmergencyButton />
-            </div>
-          )}
+        <CardContent>
+          <MedicalMap facilityType={config?.facilityType || 'clinic'} />
         </CardContent>
       </Card>
-
-      {severity !== 'high' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Unidades de saúde próximas</CardTitle>
-            <CardDescription>
-              Baseado na sua localização atual, encontramos estas opções
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-};
-
-export default TriageResult;
+    )}
+  </div>
+);
