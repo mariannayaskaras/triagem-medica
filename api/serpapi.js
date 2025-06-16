@@ -1,9 +1,14 @@
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
   const apiKey = process.env.SERPAPI_KEY;
+  const apiKey = process.env.SERPAPI_KEY;
+console.log("SERPAPI_KEY:", apiKey);  // <<< ADICIONE ESTA LINHA
+
   const location = req.query.location;
 
   if (!apiKey) {
-    return res.status(500).json({ error: "API Key não configurada." });
+    return res.status(500).json({ error: "API Key da SerpApi não configurada." });
   }
 
   if (!location) {
@@ -18,6 +23,6 @@ export default async function handler(req, res) {
     res.status(200).json(data);
   } catch (error) {
     console.error("Erro ao consultar SerpApi:", error);
-    res.status(500).json({ error: "Falha ao consultar SerpApi." });
+    res.status(500).json({ error: "Falha ao consultar a SerpApi." });
   }
 }
