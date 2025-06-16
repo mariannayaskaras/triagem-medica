@@ -3,23 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Triagem Médica Inteligente</title>
-    <link rel="icon" href="/favicon.ico" />
-    <meta
-      name="description"
-      content="Descreva seus sintomas e receba uma recomendação de atendimento médico com base na severidade."
+    <title>Triagem Médica</title>
+
+    <!-- Importando o CSS do Leaflet (obrigatório para o mapa funcionar) -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xwE/4gVH0188R+dS+XgXMxGKwFU+Z5NfD1tOe6wqkU1Vs5blG1z7sPAa+w7gTfXYy3jHK5v6Qt1zj+Z8+0n8VA=="
+      crossorigin=""
     />
 
-    <!-- Google Maps API -->
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGiGs3LhI6nGEmLrlSW1FL0yh0QomaQw8&libraries=places"
-      async
-      defer
-    ></script>
-
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Se antes tinha um script da Google Maps API aqui, foi removido -->
   </head>
   <body>
     <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

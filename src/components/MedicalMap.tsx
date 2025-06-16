@@ -1,92 +1,71 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useNearbyFacilities, Facility } from '@/hooks/useNearbyFacilities';
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-interface MedicalMapProps {
-  facilityType: string; // Ex: "hospital", "ubs", "upa"
+// Corrige os ícones padrão do Leaflet no build React
+delete (L.Icon.Default as any).prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+interface Place {
+  title: string;
+  address: string;
+  gps_coordinates: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
-const facilityMap: Record<string, string> = {
-  ubs: 'hospital',
-  upa: 'urgent care',
-  hospital: 'hospital'
-};
+const MedicalMap = () => {
+  const [places, setPlaces] = useState<Place[]>([]);
 
-const MedicalMap = ({ facilityType }: MedicalMapProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
-
-  const keyword = facilityMap[facilityType.toLowerCase()] || 'hospital';
-  const { facilities } = useNearbyFacilities(keyword, userCoords);
-
-  // Carrega script do Google Maps se ainda não carregado
   useEffect(() => {
-    const scriptId = 'google-maps-api';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initUserLocation();
-      document.body.appendChild(script);
-    } else {
-      initUserLocation();
+    async function fetchPlaces() {
+      try {
+        const response = await fetch(
+          "https://serpapi.com/search.json?engine=google_maps&q=unidade+de+saúde+antônio+alves&api_key=46fc0880e871efe8cd2b724b98e38fb315c33a39bb14e47e005925cdac78dc3e"
+        );
+        const data = await response.json();
+        if (data.local_results) {
+          setPlaces(data.local_results);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar locais da SerpApi:", error);
+      }
     }
+
+    fetchPlaces();
   }, []);
 
-  const initUserLocation = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        console.error('Erro ao obter localização do usuário:', error);
-      }
-    );
-  };
-
-  useEffect(() => {
-    if (userCoords && mapRef.current && window.google && !mapInstance) {
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: userCoords,
-        zoom: 14
-      });
-
-      new window.google.maps.Marker({
-        position: userCoords,
-        map,
-        title: 'Sua localização',
-        icon: {
-          url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-        }
-      });
-
-      setMapInstance(map);
-    }
-  }, [userCoords, mapRef.current]);
-
-  useEffect(() => {
-    if (!mapInstance || !facilities.length) return;
-
-    facilities.forEach((facility: Facility) => {
-      new window.google.maps.Marker({
-        position: { lat: facility.lat, lng: facility.lng },
-        map: mapInstance,
-        title: facility.name
-      });
-    });
-  }, [facilities, mapInstance]);
+  const centerPosition = places.length > 0
+    ? [places[0].gps_coordinates.latitude, places[0].gps_coordinates.longitude]
+    : [-23.55052, -46.633308]; // Posição padrão (São Paulo)
 
   return (
-    <div
-      ref={mapRef}
-      className="w-full h-96 rounded-md shadow-md border border-gray-200"
-    />
+    <div>
+      <h2>Unidades de Saúde Encontradas</h2>
+      <MapContainer center={centerPosition} zoom={13} style={{ height: "500px", width: "100%" }}>
+        <TileLayer
+          attribution='&copy; OpenStreetMap contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {places.map((place, index) => (
+          <Marker
+            key={index}
+            position={[place.gps_coordinates.latitude, place.gps_coordinates.longitude]}
+          >
+            <Popup>
+              <strong>{place.title}</strong><br />
+              {place.address}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 
