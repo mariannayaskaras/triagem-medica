@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';  // Se estiver usando Node 16 ou inferior, senão pode tirar
-
 export default async function handler(req, res) {
   // ✅ Logando a variável de ambiente
   const apiKey = process.env.SERPAPI_KEY;
