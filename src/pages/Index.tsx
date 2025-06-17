@@ -18,6 +18,8 @@ import VoiceRecorder from '@/components/VoiceRecorder';
 import TriageResult, { SeverityLevel } from '@/components/TriageResult';
 import EmergencyButton from '@/components/EmergencyButton';
 import { analyzeSymptoms } from '@/utils/triageAlgorithm';
+import MedicalMap from '@/components/MedicalMap';
+import { useLocation } from '@/hooks/use-location';
 
 const Index = () => {
   const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
@@ -35,6 +37,8 @@ const Index = () => {
     const stored = localStorage.getItem('triagemHistorico');
     return stored ? JSON.parse(stored) : [];
   });
+
+  const location = useLocation();
 
   const handleSymptomSubmission = (symptomList: string[]) => {
     const symptomText = symptomList.map((s) => s.trim()).filter(Boolean).join(', ');
@@ -62,6 +66,15 @@ const Index = () => {
       setTriageHistory(novoHistorico);
       localStorage.setItem('triagemHistorico', JSON.stringify(novoHistorico));
     }, 1500);
+  };
+
+  // Adaptador para VoiceRecorder
+  const handleVoiceTranscription = (text: string) => {
+    const parsedSymptoms = text
+      .split(/,|;|\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    handleSymptomSubmission(parsedSymptoms);
   };
 
   const handleReset = () => {
@@ -112,7 +125,7 @@ const Index = () => {
                     <SymptomInput onSubmit={handleSymptomSubmission} />
                   </TabsContent>
                   <TabsContent value="voice">
-                    <VoiceRecorder onTranscription={handleSymptomSubmission} />
+                    <VoiceRecorder onTranscription={handleVoiceTranscription} />
                   </TabsContent>
                 </Tabs>
               </CardContent>
@@ -159,11 +172,24 @@ const Index = () => {
               </div>
             ) : (
               triageResult && (
-                <TriageResult
-                  severity={triageResult.severity}
-                  recommendation={triageResult.recommendation}
-                  symptoms={triageResult.symptoms}
-                />
+                <>
+                  <TriageResult
+                    severity={triageResult.severity}
+                    recommendation={triageResult.recommendation}
+                    symptoms={triageResult.symptoms}
+                  />
+                  <div className="mt-8">
+                    <MedicalMap 
+                      city={location.city} 
+                      coords={location.coords} 
+                      facilityType={
+                        triageResult?.severity === 'low' ? 'ubs' :
+                        triageResult?.severity === 'medium' ? 'upa' :
+                        triageResult?.severity === 'high' ? 'hospital' : undefined
+                      }
+                    />
+                  </div>
+                </>
               )
             )}
           </div>

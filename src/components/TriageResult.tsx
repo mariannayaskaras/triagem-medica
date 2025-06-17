@@ -107,20 +107,6 @@ const TriageResult = ({ severity, recommendation, symptoms }: TriageResultProps)
           )}
         </CardContent>
       </Card>
-
-      {severity !== 'high' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Unidades de saúde próximas</CardTitle>
-            <CardDescription>
-              Baseado na sua localização atual, encontramos estas opções:
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MedicalMap facilityType={config.facilityType} />
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

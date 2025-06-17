@@ -48,8 +48,8 @@ export function useLocation(): LocationData {
         );
 
         // Tratamento específico para casos conhecidos
-        if (cidade === "São Cristóvão") {
-          console.warn("⚠️ Corrigindo cidade de 'São Cristóvão' para 'Aracaju'");
+        if (cidade === "São Cristóvão" || cidade.includes("Aracaju")) {
+          console.warn("⚠️ Corrigindo cidade para 'Aracaju'");
           cidade = "Aracaju";
         }
 

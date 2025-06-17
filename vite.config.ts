@@ -14,5 +14,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      '/api/serpapi': 'http://localhost:3001'
+    }
   },
 });
