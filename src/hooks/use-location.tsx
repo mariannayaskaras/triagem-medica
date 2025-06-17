@@ -21,17 +21,22 @@ export function useLocation(): LocationData {
     };
 
     const buscarPorCoordenadas = async (lat: number, lon: number) => {
-      console.log("📡 Obtendo cidade via coordenadas...");
       setCoords({ lat, lng: lon });
+      console.log("📡 Buscando cidade por coordenadas:", lat, lon);
 
       try {
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=10`
         );
+
+        if (!response.ok) {
+          throw new Error(`Erro HTTP ao converter coordenadas: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
 
         if (!data.address) {
-          throw new Error("Endereço não encontrado na resposta.");
+          throw new Error("Endereço não encontrado na resposta da API Nominatim.");
         }
 
         let cidade = sanitizeString(
@@ -42,55 +47,64 @@ export function useLocation(): LocationData {
           "Local Desconhecido"
         );
 
+        // Tratamento específico para casos conhecidos
         if (cidade === "São Cristóvão") {
-          console.warn("⚠️ Cidade incorreta detectada. Substituindo por 'Aracaju'.");
+          console.warn("⚠️ Corrigindo cidade de 'São Cristóvão' para 'Aracaju'");
           cidade = "Aracaju";
         }
 
         setCity(cidade);
         setError(null);
-      } catch (err) {
-        console.warn("🌐 Erro ao converter coordenadas para cidade:", err);
-        setError("Erro ao converter coordenadas para cidade.");
+      } catch (err: any) {
+        console.error("❌ Erro ao buscar cidade por coordenadas:", err.message || err);
+        setError("Erro ao converter coordenadas em cidade.");
+        setCity("Local Desconhecido");
       } finally {
         setLoading(false);
       }
     };
 
     const buscarPorIP = async () => {
-      console.warn("📍 Usando localização aproximada por IP...");
+      console.warn("📍 Tentando obter cidade via IP...");
       try {
         const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
+
+        if (!response.ok) {
+          throw new Error(`Erro HTTP ao buscar por IP: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
 
         setCity(sanitizeString(data.city));
         setCoords(null);
-        setError("⚠️ Usando localização aproximada por IP");
-      } catch (err) {
-        console.error('❌ Falha ao obter localização por IP:', err);
+        setError("⚠️ Usando localização aproximada por IP.");
+      } catch (err: any) {
+        console.error("❌ Erro ao obter localização via IP:", err.message || err);
         setCity("Local Desconhecido");
         setCoords(null);
-        setError("Falha ao obter localização");
+        setError("Falha ao obter localização por IP.");
       } finally {
         setLoading(false);
       }
     };
 
     const obterLocalizacao = () => {
-      console.log("🔍 Tentando obter geolocalização...");
+      console.log("🔎 Tentando obter localização do navegador...");
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            console.log("📍 Coordenadas:", position.coords);
+            console.log("✅ Coordenadas obtidas:", position.coords);
             buscarPorCoordenadas(position.coords.latitude, position.coords.longitude);
           },
           (err) => {
-            console.warn("🚫 Geolocalização negada. Usando IP:", err.message);
+            console.warn("⚠️ Geolocalização do navegador falhou:", err.message);
             buscarPorIP();
           },
           { timeout: 8000, maximumAge: 60000 }
         );
       } else {
+        console.warn("⚠️ Geolocalização não suportada no navegador. Caindo para IP...");
         buscarPorIP();
       }
     };
@@ -99,12 +113,12 @@ export function useLocation(): LocationData {
   }, []);
 
   useEffect(() => {
-    console.log("🧭 STATUS DE LOCALIZAÇÃO:");
-    console.log(" - Coordenadas:", coords);
+    console.log("📍 Status da localização:");
     console.log(" - Cidade:", city);
+    console.log(" - Coordenadas:", coords);
     console.log(" - Erro:", error);
     console.log(" - Loading:", loading);
-  }, [coords, city, error, loading]);
+  }, [city, coords, error, loading]);
 
   return { city, coords, loading, error };
 }

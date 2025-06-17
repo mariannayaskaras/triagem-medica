@@ -1,43 +1,43 @@
+// api/serpapi.js
+
 export default async function handler(req, res) {
-  // ✅ Logando a variável de ambiente
   const apiKey = process.env.SERPAPI_KEY;
-  console.log("🔑 SERPAPI_KEY:", apiKey);
+  const { location } = req.query;
 
-  // ✅ Logando o parâmetro recebido
-  const location = req.query.location;
-  console.log("📍 Location recebida:", location);
-
-  // Validação básica
   if (!apiKey) {
-    console.error("❌ API Key da SerpApi não configurada!");
     return res.status(500).json({ error: "API Key da SerpApi não configurada." });
   }
 
   if (!location) {
-    console.error("❌ Parâmetro 'location' ausente.");
-    return res.status(400).json({ error: "Parâmetro 'location' ausente." });
+    return res.status(400).json({ error: "Parâmetro 'location' é obrigatório." });
   }
 
-  // ✅ Montando a URL
-  const url = `https://serpapi.com/search.json?engine=google_maps&q=unidades+de+saúde+em+${encodeURIComponent(location)}&api_key=${apiKey}`;
-  console.log("🌐 URL da requisição para a SerpApi:", url);
+  const searchUrl = `https://serpapi.com/search.json?engine=google_maps&q=unidades+de+saúde+em+${encodeURIComponent(location)}&api_key=${apiKey}`;
+
+  console.log("🔍 Consultando SerpApi:", searchUrl);
 
   try {
-    // ✅ Antes de fazer o fetch
-    console.log("🚀 Fazendo requisição para a SerpApi...");
+    const response = await fetch(searchUrl);
+    const data = await response.json();
 
-    const fetchResponse = await fetch(url);
+    if (!data.local_results) {
+      return res.status(404).json({ error: "Nenhum resultado encontrado." });
+    }
 
-    console.log("✅ Resposta da SerpApi - status:", fetchResponse.status);
+    const locais = data.local_results.map(local => ({
+      nome: local.title,
+      endereco: local.address,
+      telefone: local.phone,
+      horario: local.hours,
+      lat: local.gps_coordinates?.latitude,
+      lng: local.gps_coordinates?.longitude,
+      avaliacao: local.rating,
+      reviews: local.reviews
+    }));
 
-    const data = await fetchResponse.json();
-
-    // ✅ Logando a resposta recebida da SerpApi
-    console.log("📦 Dados recebidos da SerpApi:", data);
-
-    res.status(200).json(data);
+    res.status(200).json({ locais });
   } catch (error) {
     console.error("❌ Erro ao consultar a SerpApi:", error);
-    res.status(500).json({ error: "Falha ao consultar a SerpApi." });
+    res.status(500).json({ error: "Erro ao buscar dados da SerpApi." });
   }
 }

@@ -1,23 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Triagem Médica</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Triagem Médica Assistida</title>
 
-    <!-- Importando o CSS do Leaflet (obrigatório para o mapa funcionar) -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-      integrity="sha512-xwE/4gVH0188R+dS+XgXMxGKwFU+Z5NfD1tOe6wqkU1Vs5blG1z7sPAa+w7gTfXYy3jHK5v6Qt1zj+Z8+0n8VA=="
-      crossorigin=""
-    />
+  <!-- Leaflet CSS com hash SRI correto -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""
+  />
 
-    <!-- Se antes tinha um script da Google Maps API aqui, foi removido -->
-  </head>
-  <body>
-    <div id="root"></div>
+  <style>
+    #map {
+      height: 300px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
 
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <h1>Triagem Médica Assistida</h1>
+  <button onclick="obterLocalizacao()">Obter Minha Localização</button>
+
+  <div id="status"></div>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""
+  ></script>
+
+  <!-- JS de Geolocalização -->
+  <script>
+    function obterLocalizacao() {
+      const statusDiv = document.getElementById('status');
+
+      if (navigator.geolocation) {
+        statusDiv.innerText = "Obtendo localização...";
+
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            statusDiv.innerText = `Latitude: ${latitude}, Longitude: ${longitude}`;
+
+            // Exibir no mapa
+            const map = L.map('map').setView([latitude, longitude], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.marker([latitude, longitude]).addTo(map)
+              .bindPopup('Sua Localização Atual')
+              .openPopup();
+          },
+          function(error) {
+            statusDiv.innerText = "Erro ao obter localização: " + error.message;
+          }
+        );
+      } else {
+        statusDiv.innerText = "Geolocalização não é suportada neste navegador.";
+      }
+    }
+  </script>
+
+</body>
 </html>
