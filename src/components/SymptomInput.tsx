@@ -63,6 +63,12 @@ const SymptomInput = ({ onSubmit }: SymptomInputProps) => {
           onChange={handleInputChange}
           maxLength={2000}
           required
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
         />
         <div className="flex justify-between text-xs text-gray-500">
           <span>{symptoms.length}/2000 caracteres</span>

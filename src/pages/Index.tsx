@@ -20,6 +20,7 @@ import EmergencyButton from '@/components/EmergencyButton';
 import { analyzeSymptoms } from '@/utils/triageAlgorithm';
 import MedicalMap from '@/components/MedicalMap';
 import { useLocation } from '@/hooks/use-location';
+import { MdLocalHospital } from 'react-icons/md';
 
 const Index = () => {
   const [inputMethod, setInputMethod] = useState<'text' | 'voice'>('text');
@@ -94,7 +95,10 @@ const Index = () => {
       <main className="flex-1 container max-w-4xl py-8 px-4">
         {!showResults ? (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-center text-gray-800">Triagem Médica Assistida</h2>
+            <h2 className="text-2xl font-bold text-center text-gray-800 flex items-center justify-center gap-2">
+              <MdLocalHospital className="inline-block text-triage-blue w-7 h-7" />
+              Triagem Médica Assistida
+            </h2>
             <p className="text-center text-gray-600 max-w-2xl mx-auto">
               Descreva seus sintomas em detalhes e nossa IA irá analisar a gravidade
               e sugerir o tipo de atendimento médico mais adequado.
